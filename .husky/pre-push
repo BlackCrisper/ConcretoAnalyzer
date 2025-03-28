@@ -1,0 +1,11 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Executar build
+npm run build
+
+# Executar testes de integração
+npm run test:integration
+
+# Verificar cobertura de testes
+npm run test:coverage 
