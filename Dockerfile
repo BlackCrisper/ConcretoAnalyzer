@@ -21,4 +21,4 @@ RUN npm prune --production
 EXPOSE 3000
 
 # Comando de inicialização
-CMD ["npm", "start"] 
+CMD ["node", "dist/index.js"] 
