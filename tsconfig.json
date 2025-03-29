@@ -1,28 +1,33 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2017",
     "module": "commonjs",
-    "lib": ["es2018", "esnext.asynciterable"],
-    "skipLibCheck": true,
-    "sourceMap": true,
+    "lib": ["es2017", "dom", "dom.iterable", "esnext"],
+    "declaration": true,
     "outDir": "./dist",
-    "moduleResolution": "node",
-    "removeComments": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true,
+    "rootDir": "./src",
+    "strict": true,
+    "types": ["node", "jest"],
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "exclude": ["node_modules"],
-  "include": ["./src/**/*.ts"]
+  "include": ["src/**/*", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

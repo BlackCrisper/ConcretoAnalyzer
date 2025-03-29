@@ -165,4 +165,11 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+// Tipos de dados extraídos
+export interface ExtractedData {
+  elements: any[];
+  tables: any[];
+  notes: any[];
 } 

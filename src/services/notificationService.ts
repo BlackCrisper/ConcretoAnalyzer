@@ -11,6 +11,14 @@ export interface Notification {
   createdAt: Date;
 }
 
+interface IdResult {
+  id: string;
+}
+
+interface CountResult {
+  count: number;
+}
+
 export async function createNotification(
   userId: string,
   title: string,
@@ -18,14 +26,14 @@ export async function createNotification(
   type: Notification['type'] = 'info'
 ): Promise<Notification | null> {
   try {
-    const result = await executeQuery<Notification>(
-      `INSERT INTO Notifications (user_id, title, message, type, read)
-       VALUES (@userId, @title, @message, @type, 0);
+    const result = await executeQuery<IdResult>(
+      `INSERT INTO Notifications (user_id, title, message, type, read, created_at)
+       VALUES (@userId, @title, @message, @type, 0, GETDATE());
        SELECT SCOPE_IDENTITY() as id;`,
       { userId, title, message, type }
     );
 
-    if (result.length > 0) {
+    if (result[0]?.id) {
       return {
         id: result[0].id,
         userId,
@@ -39,7 +47,7 @@ export async function createNotification(
 
     return null;
   } catch (error) {
-    console.error('Error creating notification:', error);
+    logger.error('Error creating notification:', error);
     return null;
   }
 }
@@ -54,30 +62,40 @@ export async function getUserNotifications(userId: string): Promise<Notification
       { userId }
     );
   } catch (error) {
-    console.error('Error getting user notifications:', error);
+    logger.error('Error getting user notifications:', error);
     return [];
   }
 }
 
 export async function markNotificationAsRead(notificationId: string): Promise<boolean> {
   try {
-    await executeQuery(
-      'UPDATE Notifications SET read = 1 WHERE id = @id',
+    const result = await executeQuery<CountResult>(
+      `UPDATE Notifications 
+       SET read = 1 
+       WHERE id = @id;
+       SELECT @@ROWCOUNT as count;`,
       { id: notificationId }
     );
-    return true;
+
+    return result[0]?.count > 0;
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logger.error('Error marking notification as read:', error);
     return false;
   }
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
   try {
-    await executeQuery('DELETE FROM notifications WHERE id = ?', [notificationId]);
-    return true;
+    const result = await executeQuery<CountResult>(
+      `DELETE FROM Notifications 
+       WHERE id = @id;
+       SELECT @@ROWCOUNT as count;`,
+      { id: notificationId }
+    );
+
+    return result[0]?.count > 0;
   } catch (error) {
-    logger.error('Erro ao excluir notificação:', error);
+    logger.error('Error deleting notification:', error);
     return false;
   }
 } 

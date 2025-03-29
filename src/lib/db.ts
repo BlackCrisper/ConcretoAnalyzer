@@ -3,6 +3,7 @@
 import { Pool, PoolClient } from 'pg';
 import { DB_CONFIG } from '../config/env';
 import { logger } from './logger';
+import { sqlConfig } from './db-config';
 
 export class DatabaseService {
   private static instance: DatabaseService;
@@ -161,13 +162,24 @@ export class DatabaseService {
 
 export const db = DatabaseService.getInstance();
 
-export async function executeQuery<T>(query: string, params: any[] = []): Promise<T[]> {
+export async function executeQuery<T>(query: string, params?: Record<string, any>): Promise<T[]> {
+  const db = DatabaseService.getInstance();
   try {
-    // TODO: Implementar conexão real com banco de dados
-    logger.info('Executando query:', { query, params });
-    return [];
+    return await db.query<T>(query, params ? Object.values(params) : undefined);
   } catch (error) {
-    logger.error('Erro ao executar query:', error);
+    logger.error('Erro ao executar query', { error, query, params });
     throw error;
   }
+}
+
+export async function executeTransaction<T>(queries: { query: string; params?: Record<string, any> }[]): Promise<T[][]> {
+  const db = DatabaseService.getInstance();
+  return db.transaction(async (client) => {
+    const results = [];
+    for (const { query, params } of queries) {
+      const result = await client.query(query, params ? Object.values(params) : undefined);
+      results.push(result.rows);
+    }
+    return results as T[][];
+  });
 }

@@ -1,7 +1,7 @@
 export interface OCRResult {
   text: string;
   confidence: number;
-  blocks: OCRBlock[];
+  blocks: OCRWord[];
 }
 
 export interface OCRBlock {

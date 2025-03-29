@@ -24,6 +24,22 @@ interface DBUser {
   active: boolean;
 }
 
+interface Permission {
+  permission_code: string;
+}
+
+interface PermissionId {
+  id: string;
+}
+
+interface IdResult {
+  id: string;
+}
+
+interface CountResult {
+  count: number;
+}
+
 // Authenticate a user with email and password
 export async function authenticateUser(email: string, password: string): Promise<AuthResult> {
   try {
@@ -63,7 +79,7 @@ export async function authenticateUser(email: string, password: string): Promise
       company: dbUser.company_name,
       companyId: dbUser.company_id,
       branchId: dbUser.branch_id,
-      branchName: dbUser.branch_name,
+      branchName: dbUser.branch_name || null,
       permissions: await getUserPermissions(dbUser.id),
     };
 
@@ -78,10 +94,6 @@ export async function authenticateUser(email: string, password: string): Promise
 // Get user permissions from the database
 async function getUserPermissions(userId: string): Promise<string[]> {
   try {
-    interface Permission {
-      permission_code: string;
-    }
-
     const permissions = await executeQuery<Permission>(`
       SELECT p.permission_code
       FROM UserPermissions up
@@ -126,7 +138,7 @@ export async function getAllUsers(): Promise<User[]> {
         company: dbUser.company_name,
         companyId: dbUser.company_id,
         branchId: dbUser.branch_id,
-        branchName: dbUser.branch_name,
+        branchName: dbUser.branch_name || null,
         permissions: await getUserPermissions(dbUser.id),
       });
     }
@@ -144,7 +156,7 @@ export async function createUser(userData: Omit<User, 'id'> & { password: string
     const hashedPassword = hashPassword(userData.password);
 
     // Insert the user into the database
-    const result = await executeQuery(`
+    const result = await executeQuery<IdResult>(`
       INSERT INTO Users (name, email, password_hash, role, company_id, branch_id, active)
       VALUES (@name, @email, @passwordHash, @role, @companyId, @branchId, 1);
       SELECT SCOPE_IDENTITY() AS id;
@@ -162,24 +174,18 @@ export async function createUser(userData: Omit<User, 'id'> & { password: string
     // Add user permissions
     if (userId && userData.permissions.length > 0) {
       // Get permission IDs from permission codes
-      interface PermissionId {
-        id: string;
-      }
-
-      const permissionCodes = userData.permissions.map(p => `'${p}'`).join(',');
-
       const permissionIds = await executeQuery<PermissionId>(`
-        SELECT id FROM Permissions WHERE permission_code IN (${permissionCodes})
-      `);
+        SELECT id FROM Permissions WHERE permission_code IN (@permissionCodes)
+      `, { permissionCodes: userData.permissions });
 
       // Insert user permissions
-      for (const permission of permissionIds) {
+      for (const permId of permissionIds) {
         await executeQuery(`
           INSERT INTO UserPermissions (user_id, permission_id)
           VALUES (@userId, @permissionId)
         `, {
           userId,
-          permissionId: permission.id
+          permissionId: permId.id
         });
       }
     }
@@ -243,30 +249,23 @@ export async function updateUser(userId: string, userData: Partial<User> & { pas
       await executeQuery('DELETE FROM UserPermissions WHERE user_id = @userId', { userId });
 
       // Get permission IDs from permission codes
-      interface PermissionId {
-        id: string;
-      }
-
-      const permissionCodes = userData.permissions.map(p => `'${p}'`).join(',');
-
       const permissionIds = await executeQuery<PermissionId>(`
-        SELECT id FROM Permissions WHERE permission_code IN (${permissionCodes})
-      `);
+        SELECT id FROM Permissions WHERE permission_code IN (@permissionCodes)
+      `, { permissionCodes: userData.permissions });
 
-      // Insert user permissions
-      for (const permission of permissionIds) {
+      // Insert new permissions
+      for (const permId of permissionIds) {
         await executeQuery(`
           INSERT INTO UserPermissions (user_id, permission_id)
           VALUES (@userId, @permissionId)
         `, {
           userId,
-          permissionId: permission.id
+          permissionId: permId.id
         });
       }
     }
 
     return { success: true };
-
   } catch (error) {
     console.error('Error updating user:', error);
     return { success: false, message: 'Erro ao atualizar usuário' };
@@ -284,7 +283,7 @@ export async function updateUserLastLogin(userId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error updating last login timestamp:', error);
+    console.error('Error updating user last login:', error);
     return false;
   }
 }
@@ -292,7 +291,6 @@ export async function updateUserLastLogin(userId: string): Promise<boolean> {
 // Get user by ID
 export async function getUserById(userId: string): Promise<User | null> {
   try {
-    // Query the database for the user
     const users = await executeQuery<DBUser>(`
       SELECT u.id, u.name, u.email, u.role, u.company_id, u.branch_id,
              c.name as company_name, b.name as branch_name, u.active
@@ -308,11 +306,7 @@ export async function getUserById(userId: string): Promise<User | null> {
 
     const dbUser = users[0];
 
-    // Get user permissions
-    const permissions = await getUserPermissions(userId);
-
-    // Convert DB user to application user
-    const user: User = {
+    return {
       id: dbUser.id,
       name: dbUser.name,
       email: dbUser.email,
@@ -320,23 +314,29 @@ export async function getUserById(userId: string): Promise<User | null> {
       company: dbUser.company_name,
       companyId: dbUser.company_id,
       branchId: dbUser.branch_id,
-      branchName: dbUser.branch_name,
-      permissions
+      branchName: dbUser.branch_name || null,
+      permissions: await getUserPermissions(dbUser.id),
     };
-
-    return user;
   } catch (error) {
-    console.error(`Error getting user ${userId}:`, error);
+    console.error('Error getting user by ID:', error);
     return null;
   }
 }
 
-// Delete user (or deactivate)
+// Delete user (soft delete)
 export async function deleteUser(userId: string): Promise<{ success: boolean, message?: string }> {
   try {
-    // In a real application, you might want to soft delete by setting the active flag to 0
-    // rather than hard delete
-    const result = await executeQuery(`
+    // Check if user exists
+    const userExists = await executeQuery<CountResult>(`
+      SELECT COUNT(*) as count FROM Users WHERE id = @userId AND active = 1
+    `, { userId });
+
+    if (userExists[0]?.count === 0) {
+      return { success: false, message: 'Usuário não encontrado' };
+    }
+
+    // Soft delete the user
+    await executeQuery(`
       UPDATE Users
       SET active = 0
       WHERE id = @userId
@@ -344,7 +344,7 @@ export async function deleteUser(userId: string): Promise<{ success: boolean, me
 
     return { success: true };
   } catch (error) {
-    console.error(`Error deleting user ${userId}:`, error);
+    console.error('Error deleting user:', error);
     return { success: false, message: 'Erro ao excluir usuário' };
   }
 }

@@ -1,8 +1,19 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { executeQuery } from '../lib/db';
 import { analyzeStructure } from '../services/structuralAnalysisService';
+import { AuthRequest } from '../middleware/auth';
 
-export async function startAnalysis(req: Request, res: Response): Promise<void> {
+interface ProjectReport {
+  id: string;
+  project_id: string;
+  user_id: string;
+  status: string;
+  error_message: string | null;
+  progress: number;
+  results: any;
+}
+
+export async function startAnalysis(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { projectId } = req.params;
     const userId = req.user?.id;
@@ -14,9 +25,9 @@ export async function startAnalysis(req: Request, res: Response): Promise<void> 
     }
 
     // Verificar se o projeto existe e se o usuário tem acesso
-    const project = await executeQuery(
-      `SELECT user_id FROM Projects WHERE id = @projectId`,
-      { projectId }
+    const project = await executeQuery<{ user_id: string }>(
+      `SELECT user_id FROM Projects WHERE id = $1`,
+      [projectId]
     );
 
     if (!project[0]) {
@@ -32,9 +43,9 @@ export async function startAnalysis(req: Request, res: Response): Promise<void> 
     // Verificar se já existe uma análise em andamento
     const existingAnalysis = await executeQuery(
       `SELECT id FROM ProjectReports
-       WHERE project_id = @projectId
+       WHERE project_id = $1
        AND status = 'processing'`,
-      { projectId }
+      [projectId]
     );
 
     if (existingAnalysis[0]) {
@@ -43,14 +54,11 @@ export async function startAnalysis(req: Request, res: Response): Promise<void> 
     }
 
     // Criar registro da análise
-    const result = await executeQuery(
+    const result = await executeQuery<{ id: string }>(
       `INSERT INTO ProjectReports (project_id, status, created_by)
-       OUTPUT INSERTED.id
-       VALUES (@projectId, 'processing', @userId)`,
-      {
-        projectId,
-        userId
-      }
+       VALUES ($1, 'processing', $2)
+       RETURNING id`,
+      [projectId, userId]
     );
 
     const analysisId = result[0].id;
@@ -61,12 +69,9 @@ export async function startAnalysis(req: Request, res: Response): Promise<void> 
       executeQuery(
         `UPDATE ProjectReports
          SET status = 'error',
-             error_message = @error
-         WHERE id = @analysisId`,
-        {
-          analysisId,
-          error: error.message
-        }
+             error_message = $1
+         WHERE id = $2`,
+        [error.message, analysisId]
       );
     });
 
@@ -84,7 +89,7 @@ export async function startAnalysis(req: Request, res: Response): Promise<void> 
   }
 }
 
-export async function getAnalysisStatus(req: Request, res: Response): Promise<void> {
+export async function getAnalysisStatus(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -96,12 +101,12 @@ export async function getAnalysisStatus(req: Request, res: Response): Promise<vo
     }
 
     // Verificar se a análise existe e se o usuário tem acesso
-    const analysis = await executeQuery(
+    const analysis = await executeQuery<ProjectReport>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id`,
-      { id }
+       WHERE r.id = $1`,
+      [id]
     );
 
     if (!analysis[0]) {
@@ -126,7 +131,7 @@ export async function getAnalysisStatus(req: Request, res: Response): Promise<vo
   }
 }
 
-export async function getAnalysisResults(req: Request, res: Response): Promise<void> {
+export async function getAnalysisResults(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -138,12 +143,12 @@ export async function getAnalysisResults(req: Request, res: Response): Promise<v
     }
 
     // Verificar se a análise existe e se o usuário tem acesso
-    const analysis = await executeQuery(
+    const analysis = await executeQuery<ProjectReport>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id`,
-      { id }
+       WHERE r.id = $1`,
+      [id]
     );
 
     if (!analysis[0]) {
@@ -168,7 +173,7 @@ export async function getAnalysisResults(req: Request, res: Response): Promise<v
   }
 }
 
-export async function cancelAnalysis(req: Request, res: Response): Promise<void> {
+export async function cancelAnalysis(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -180,12 +185,12 @@ export async function cancelAnalysis(req: Request, res: Response): Promise<void>
     }
 
     // Verificar se a análise existe e se o usuário tem acesso
-    const analysis = await executeQuery(
+    const analysis = await executeQuery<ProjectReport>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id`,
-      { id }
+       WHERE r.id = $1`,
+      [id]
     );
 
     if (!analysis[0]) {
@@ -206,9 +211,9 @@ export async function cancelAnalysis(req: Request, res: Response): Promise<void>
     await executeQuery(
       `UPDATE ProjectReports
        SET status = 'cancelled',
-           updated_at = GETDATE()
-       WHERE id = @id`,
-      { id }
+           updated_at = NOW()
+       WHERE id = $1`,
+      [id]
     );
 
     res.json({ message: 'Análise cancelada com sucesso' });

@@ -3,18 +3,32 @@
 import { executeQuery } from '@/lib/db';
 import { Company, BranchOffice } from '@/contexts/auth-context';
 
+interface DBCompany {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  active: boolean;
+}
+
+interface DBBranch {
+  id: string;
+  name: string;
+  company_id: string;
+}
+
+interface CountResult {
+  count: number;
+}
+
+interface IdResult {
+  id: string;
+}
+
 // Get all companies
 export async function getAllCompanies(): Promise<Company[]> {
   try {
-    interface DBCompany {
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      address: string;
-      active: boolean;
-    }
-
     const companies = await executeQuery<DBCompany>(`
       SELECT id, name, email, phone, address, active
       FROM Companies
@@ -47,12 +61,6 @@ export async function getAllCompanies(): Promise<Company[]> {
 // Get all branches for a company
 export async function getCompanyBranches(companyId: string): Promise<BranchOffice[]> {
   try {
-    interface DBBranch {
-      id: string;
-      name: string;
-      company_id: string;
-    }
-
     const branches = await executeQuery<DBBranch>(`
       SELECT id, name, company_id
       FROM Branches
@@ -74,7 +82,7 @@ export async function getCompanyBranches(companyId: string): Promise<BranchOffic
 // Create a new company
 export async function createCompany(companyData: Omit<Company, 'id' | 'branches'>): Promise<{ success: boolean, companyId?: string, message?: string }> {
   try {
-    const result = await executeQuery(`
+    const result = await executeQuery<IdResult>(`
       INSERT INTO Companies (name, email, phone, address, active)
       VALUES (@name, @email, @phone, @address, @active);
       SELECT SCOPE_IDENTITY() AS id;
@@ -98,9 +106,18 @@ export async function createCompany(companyData: Omit<Company, 'id' | 'branches'
 // Update a company
 export async function updateCompany(companyId: string, companyData: Partial<Omit<Company, 'id' | 'branches'>>): Promise<{ success: boolean, message?: string }> {
   try {
-    let query = 'UPDATE Companies SET ';
-    const params: Record<string, any> = { companyId };
+    // Check if company exists
+    const companyExists = await executeQuery<CountResult>(`
+      SELECT COUNT(*) as count FROM Companies WHERE id = @companyId
+    `, { companyId });
+
+    if (companyExists[0]?.count === 0) {
+      return { success: false, message: 'Empresa não encontrada' };
+    }
+
+    // Build update query dynamically
     const updates: string[] = [];
+    const params: Record<string, any> = { companyId };
 
     if (companyData.name) {
       updates.push('name = @name');
@@ -122,18 +139,20 @@ export async function updateCompany(companyId: string, companyData: Partial<Omit
       params.address = companyData.address;
     }
 
-    if (companyData.active !== undefined) {
+    if (typeof companyData.active === 'boolean') {
       updates.push('active = @active');
       params.active = companyData.active;
     }
 
     if (updates.length === 0) {
-      return { success: true };
+      return { success: false, message: 'Nenhum dado para atualizar' };
     }
 
-    query += updates.join(', ') + ' WHERE id = @companyId';
-
-    await executeQuery(query, params);
+    await executeQuery(`
+      UPDATE Companies
+      SET ${updates.join(', ')}
+      WHERE id = @companyId
+    `, params);
 
     return { success: true };
   } catch (error) {
@@ -145,7 +164,7 @@ export async function updateCompany(companyId: string, companyData: Partial<Omit
 // Create a new branch
 export async function createBranch(branchData: Omit<BranchOffice, 'id'>): Promise<{ success: boolean, branchId?: string, message?: string }> {
   try {
-    const result = await executeQuery(`
+    const result = await executeQuery<IdResult>(`
       INSERT INTO Branches (name, company_id)
       VALUES (@name, @companyId);
       SELECT SCOPE_IDENTITY() AS id;
@@ -199,7 +218,7 @@ export async function updateBranch(branchId: string, branchData: Partial<Omit<Br
 export async function deleteBranch(branchId: string): Promise<{ success: boolean, message?: string }> {
   try {
     // First check if there are users associated with this branch
-    const usersCount = await executeQuery(`
+    const usersCount = await executeQuery<CountResult>(`
       SELECT COUNT(*) as count FROM Users WHERE branch_id = @branchId
     `, { branchId });
 
@@ -223,15 +242,6 @@ export async function deleteBranch(branchId: string): Promise<{ success: boolean
 // Get company by ID
 export async function getCompanyById(companyId: string): Promise<Company | null> {
   try {
-    interface DBCompany {
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      address: string;
-      active: boolean;
-    }
-
     const companies = await executeQuery<DBCompany>(`
       SELECT id, name, email, phone, address, active
       FROM Companies
@@ -243,7 +253,6 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
     }
 
     const company = companies[0];
-    const branches = await getCompanyBranches(companyId);
 
     return {
       id: company.id,
@@ -252,7 +261,7 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
       phone: company.phone,
       address: company.address,
       active: company.active,
-      branches
+      branches: await getCompanyBranches(company.id)
     };
   } catch (error) {
     console.error(`Error getting company ${companyId}:`, error);
@@ -260,44 +269,44 @@ export async function getCompanyById(companyId: string): Promise<Company | null>
   }
 }
 
-// Delete company (or deactivate)
+// Delete company
 export async function deleteCompany(companyId: string): Promise<{ success: boolean, message?: string }> {
   try {
-    // Check if there are users associated with this company
-    const usersCount = await executeQuery(`
-      SELECT COUNT(*) as count FROM Users WHERE company_id = @companyId AND active = 1
+    // Check if company exists
+    const companyExists = await executeQuery<CountResult>(`
+      SELECT COUNT(*) as count FROM Companies WHERE id = @companyId
+    `, { companyId });
+
+    if (companyExists[0]?.count === 0) {
+      return { success: false, message: 'Empresa não encontrada' };
+    }
+
+    // Check if company has users
+    const usersCount = await executeQuery<CountResult>(`
+      SELECT COUNT(*) as count FROM Users WHERE company_id = @companyId
     `, { companyId });
 
     if (usersCount[0]?.count > 0) {
-      return {
-        success: false,
-        message: 'Não é possível excluir esta empresa pois existem usuários associados a ela.'
-      };
+      return { success: false, message: 'Não é possível excluir uma empresa que possui usuários' };
     }
 
-    // Check if there are branches associated with this company
-    const branchesCount = await executeQuery(`
+    // Check if company has branches
+    const branchesCount = await executeQuery<CountResult>(`
       SELECT COUNT(*) as count FROM Branches WHERE company_id = @companyId
     `, { companyId });
 
     if (branchesCount[0]?.count > 0) {
-      return {
-        success: false,
-        message: 'Não é possível excluir esta empresa pois existem filiais associadas a ela.'
-      };
+      return { success: false, message: 'Não é possível excluir uma empresa que possui filiais' };
     }
 
-    // In a real application, you might want to soft delete by setting the active flag to 0
-    // rather than hard delete
     await executeQuery(`
-      UPDATE Companies
-      SET active = 0
+      DELETE FROM Companies
       WHERE id = @companyId
     `, { companyId });
 
     return { success: true };
   } catch (error) {
-    console.error(`Error deleting company ${companyId}:`, error);
+    console.error('Error deleting company:', error);
     return { success: false, message: 'Erro ao excluir empresa' };
   }
 }

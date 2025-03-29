@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './logger';
+import { Request, Response } from 'express';
 
 // Criar diretório de uploads se não existir
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -44,46 +45,51 @@ const upload = multer({
   storage,
   fileFilter,
   limits
-});
+}).single('file');
 
 // Middleware de tratamento de erros
-const handleUploadError = (error: multer.MulterError, req: Express.Request, res: Express.Response, next: Function) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      logger.warn('Tentativa de upload de arquivo muito grande', {
-        originalname: req.file?.originalname,
-        size: req.file?.size
-      });
+export function handleUploadError(err: any, req: Request, res: Response, next: any) {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
-        error: 'Arquivo muito grande. Tamanho máximo permitido: 10MB'
+        success: false,
+        message: 'Arquivo muito grande. Tamanho máximo permitido: 10MB'
       });
     }
-    
-    if (error.code === 'LIMIT_FILE_COUNT') {
-      logger.warn('Tentativa de upload de mais arquivos que o permitido', {
-        count: req.files?.length
-      });
-      return res.status(400).json({
-        error: 'Número máximo de arquivos excedido. Máximo permitido: 5'
-      });
-    }
-  }
-
-  if (error.message === 'Tipo de arquivo não permitido') {
-    logger.warn('Tentativa de upload de tipo de arquivo não permitido', {
-      mimetype: req.file?.mimetype,
-      originalname: req.file?.originalname
-    });
     return res.status(400).json({
-      error: 'Tipo de arquivo não permitido. Tipos permitidos: PDF, JPEG, PNG, DWG'
+      success: false,
+      message: 'Erro ao fazer upload do arquivo'
     });
   }
 
-  logger.error('Erro no upload de arquivo', { error });
+  if (err) {
+    return res.status(400).json({
+      success: false,
+      message: 'Tipo de arquivo não permitido'
+    });
+  }
+
+  next();
+}
+
+export function handleUploadSuccess(req: Request, res: Response, next: any) {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'Nenhum arquivo enviado'
+    });
+  }
+
+  next();
+}
+
+export function handleUploadError500(err: Error, req: Request, res: Response, next: any) {
+  logger.error('Erro no upload:', err);
   return res.status(500).json({
-    error: 'Erro interno ao processar upload'
+    success: false,
+    message: 'Erro interno do servidor'
   });
-};
+}
 
 // Função para excluir arquivo
 export async function deleteFile(filePath: string): Promise<void> {
@@ -139,4 +145,4 @@ export function ensureDirectoryExists(dirPath: string): void {
   }
 }
 
-export { upload, handleUploadError }; 
+export { upload }; 

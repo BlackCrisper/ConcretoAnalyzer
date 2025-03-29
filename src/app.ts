@@ -1,11 +1,10 @@
 import express from 'express';
-import {
-  setupGlobalMiddlewares,
-  setupAuthMiddlewares,
-  setupValidationMiddlewares,
-  setupAsyncMiddlewares
-} from './middleware';
+import cors from 'cors';
+import compression from 'compression';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { logger } from './lib/logger';
+import { authMiddleware, validateRequest, errorHandler, monitoringMiddleware, rateLimiter } from './middleware';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import fileRoutes from './routes/files';
@@ -16,10 +15,15 @@ import reportRoutes from './routes/reports';
 const app = express();
 
 // Configuração dos middlewares
-setupGlobalMiddlewares(app);
-setupAuthMiddlewares(app);
-setupValidationMiddlewares(app);
-setupAsyncMiddlewares(app);
+app.use(cors());
+app.use(compression());
+app.use(helmet());
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(monitoringMiddleware);
+app.use(rateLimiter);
+app.use(validateRequest);
 
 // Rota raiz
 app.get('/', (_, res) => {
@@ -32,10 +36,10 @@ app.get('/', (_, res) => {
 
 // Rotas
 app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/files', fileRoutes);
-app.use('/api/analysis', analysisRoutes);
-app.use('/api/reports', reportRoutes);
+app.use('/api/projects', authMiddleware as express.RequestHandler, projectRoutes);
+app.use('/api/files', authMiddleware as express.RequestHandler, fileRoutes);
+app.use('/api/analysis', authMiddleware as express.RequestHandler, analysisRoutes);
+app.use('/api/reports', authMiddleware as express.RequestHandler, reportRoutes);
 
 // Rota de saúde
 app.get('/health', (_, res) => {
@@ -44,6 +48,9 @@ app.get('/health', (_, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Middleware de erro
+app.use(errorHandler);
 
 // Tratamento de erros não capturados
 process.on('uncaughtException', (error) => {

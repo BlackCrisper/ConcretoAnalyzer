@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { executeQuery } from '../lib/db';
 import { processProjectFile } from '../services/fileProcessingService';
-import path from 'path';
 import fs from 'fs/promises';
 import { FileType, ProjectFile } from '../types/project';
 import { logger } from '../lib/logger';
@@ -64,13 +63,13 @@ export const uploadFile = async (req: Request, res: Response) => {
       logger.error('Erro ao processar arquivo:', error);
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Arquivo enviado com sucesso',
       fileId
     });
   } catch (error) {
     logger.error('Erro ao fazer upload do arquivo:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 };
 

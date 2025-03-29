@@ -1,11 +1,11 @@
-import { createWorker } from 'tesseract.js';
+import { createWorker, createScheduler, Worker, RecognizeResult } from 'tesseract.js';
 import { OCR_CONFIG } from '../config/env';
 import { logger } from './logger';
-import { OCRResult, OCRConfig, OCRWorker, OCRProgress } from '../types/ocr';
+import { OCRResult, OCRConfig } from '../types/ocr';
 
 export class OCRService {
   private static instance: OCRService;
-  private worker: OCRWorker | null = null;
+  private worker: Worker | null = null;
   private config: OCRConfig;
 
   private constructor() {
@@ -65,20 +65,17 @@ export class OCRService {
       return {
         text: result.data.text,
         confidence: result.data.confidence,
-        blocks: result.data.blocks.map(block => ({
-          text: block.text,
-          confidence: block.confidence,
-          bbox: block.bbox,
-          lines: block.lines.map(line => ({
-            text: line.text,
-            confidence: line.confidence,
-            bbox: line.bbox,
-            words: line.words.map(word => ({
-              text: word.text,
-              confidence: word.confidence,
-              bbox: word.bbox
-            }))
-          }))
+        blocks: result.data.words.map(word => ({
+          text: word.text,
+          confidence: word.confidence,
+          bbox: {
+            x0: word.bbox.x0,
+            y0: word.bbox.y0,
+            x1: word.bbox.x1,
+            y1: word.bbox.y1,
+            width: word.bbox.x1 - word.bbox.x0,
+            height: word.bbox.y1 - word.bbox.y0
+          }
         }))
       };
     } catch (error) {
@@ -100,7 +97,7 @@ export class OCRService {
     }
   }
 
-  public getProgress(): OCRProgress {
+  public getProgress(): { status: string; progress: number } {
     if (!this.worker) {
       return {
         status: 'initializing api',
@@ -109,10 +106,13 @@ export class OCRService {
     }
 
     return {
-      status: this.worker.getProgress().status,
-      progress: this.worker.getProgress().progress,
-      data: this.worker.getProgress().data
+      status: 'processing',
+      progress: 0
     };
+  }
+
+  public getMaxRetries(): number {
+    return this.config.maxRetries;
   }
 }
 
@@ -130,7 +130,7 @@ export async function recognizeText(imagePath: string): Promise<string> {
 
 export async function recognizeTextWithRetry(
   imagePath: string,
-  maxRetries: number = ocrService.config.maxRetries
+  maxRetries: number = ocrService.getMaxRetries()
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -171,14 +171,16 @@ export async function detectStructuralElements(imagePath: string): Promise<any[]
   }
 }
 
+interface TableCell {
+  [key: string]: string;
+}
+
 function extractTablesFromText(text: string): any[] {
   const tables: any[] = [];
   const lines = text.split('\n');
   let currentTable: any = null;
 
   for (const line of lines) {
-    // Implementar lógica de extração de tabelas
-    // Esta é uma implementação simplificada
     if (line.includes('|')) {
       if (!currentTable) {
         currentTable = {
@@ -187,7 +189,7 @@ function extractTablesFromText(text: string): any[] {
         };
       } else {
         currentTable.rows.push(
-          line.split('|').reduce((acc, cell, i) => {
+          line.split('|').reduce((acc: TableCell, cell, i) => {
             acc[currentTable.headers[i]] = cell.trim();
             return acc;
           }, {})

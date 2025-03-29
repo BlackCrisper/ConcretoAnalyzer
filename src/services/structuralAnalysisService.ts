@@ -18,6 +18,15 @@ const CONCRETE_DENSITY = 2400; // kg/m³
 const STEEL_DENSITY = 7850; // kg/m³
 const SAFETY_FACTOR = 1.4;
 
+interface DBStructuralElement extends Omit<StructuralElement, 'dimensions' | 'materials'> {
+  dimensions: string;
+  materials: string;
+}
+
+interface IdResult {
+  id: string;
+}
+
 export async function analyzeStructure(projectId: string): Promise<StructuralAnalysis> {
   try {
     // Buscar elementos do projeto
@@ -59,11 +68,16 @@ export async function analyzeStructure(projectId: string): Promise<StructuralAna
 }
 
 async function getProjectElements(projectId: string): Promise<StructuralElement[]> {
-  const result = await executeQuery<StructuralElement>(
+  const dbElements = await executeQuery<DBStructuralElement>(
     `SELECT * FROM StructuralElements WHERE project_id = @projectId`,
     { projectId }
   );
-  return result;
+
+  return dbElements.map(element => ({
+    ...element,
+    dimensions: JSON.parse(element.dimensions),
+    materials: JSON.parse(element.materials)
+  }));
 }
 
 function calculateTotals(elements: StructuralElement[]): { totalConcrete: number; totalSteel: number } {
@@ -251,7 +265,7 @@ function generateOptimizations(elements: StructuralElement[]): Optimization[] {
         description: `Ajustar dimensões para ${dimensionOptimization.recommendedDimensions}`,
         potentialSavings: {
           concrete: dimensionOptimization.potentialSavings,
-          cost: dimensionOptimization.potentialSavings * 300
+          cost: dimensionOptimization.potentialSavings * 300 // R$ 300/m³
         },
         elementId: element.id
       });
@@ -263,59 +277,81 @@ function generateOptimizations(elements: StructuralElement[]): Optimization[] {
 
 function calculateConcreteOptimization(element: StructuralElement): number {
   const currentVolume = calculateElementVolume(element);
-  const currentFck = element.materials.concrete.fck;
-  const recommendedFck = MIN_FCK + 5;
+  const optimizedFck = MIN_FCK + 5;
   
-  // Reduzir fck pode permitir reduzir dimensões
-  const potentialReduction = (currentFck - recommendedFck) / currentFck;
-  return currentVolume * potentialReduction;
+  // Calcular volume otimizado (menor volume devido à maior resistência)
+  const optimizedVolume = currentVolume * (element.materials.concrete.fck / optimizedFck);
+  
+  return currentVolume - optimizedVolume;
 }
 
 function calculateSteelOptimization(element: StructuralElement): { recommendedRatio: number; potentialSavings: number } {
-  const currentRatio = element.materials.steel.weight / (element.dimensions.width * element.dimensions.height);
   const { width, height, length } = element.dimensions;
+  const currentSteelWeight = element.materials.steel.weight;
   
-  let recommendedRatio = currentRatio;
-  let potentialSavings = 0;
+  // Calcular taxa de armadura atual
+  const currentRatio = currentSteelWeight / (width * height);
+  
+  // Determinar taxa recomendada baseada no tipo de elemento
+  let recommendedRatio: number;
+  switch (element.type) {
+    case 'pillar':
+      recommendedRatio = (MIN_PILLAR_STEEL_RATIO + MAX_PILLAR_STEEL_RATIO) / 2;
+      break;
+    case 'beam':
+      recommendedRatio = (MIN_BEAM_STEEL_RATIO + MAX_BEAM_STEEL_RATIO) / 2;
+      break;
+    case 'slab':
+      recommendedRatio = (MIN_SLAB_STEEL_RATIO + MAX_SLAB_STEEL_RATIO) / 2;
+      break;
+    default:
+      recommendedRatio = currentRatio;
+  }
+  
+  // Calcular peso otimizado
+  const optimizedWeight = (width * height) * recommendedRatio * length * STEEL_DENSITY * SAFETY_FACTOR;
+  
+  return {
+    recommendedRatio,
+    potentialSavings: currentSteelWeight - optimizedWeight
+  };
+}
+
+function calculateDimensionOptimization(element: StructuralElement): { recommendedDimensions: string; potentialSavings: number } {
+  const { width, height, length } = element.dimensions;
+  const currentVolume = calculateElementVolume(element);
+  
+  // Calcular dimensões otimizadas baseadas no tipo de elemento
+  let optimizedWidth = width;
+  let optimizedHeight = height;
   
   switch (element.type) {
     case 'pillar':
-      if (currentRatio > MAX_PILLAR_STEEL_RATIO) {
-        recommendedRatio = MAX_PILLAR_STEEL_RATIO;
-        potentialSavings = (currentRatio - recommendedRatio) * width * height * length * STEEL_DENSITY;
+      // Manter proporção quadrada ou retangular
+      if (width > height) {
+        optimizedWidth = height;
+      } else {
+        optimizedHeight = width;
       }
       break;
       
     case 'beam':
-      if (currentRatio > MAX_BEAM_STEEL_RATIO) {
-        recommendedRatio = MAX_BEAM_STEEL_RATIO;
-        potentialSavings = (currentRatio - recommendedRatio) * width * height * length * STEEL_DENSITY;
-      }
+      // Otimizar altura para resistência
+      optimizedHeight = height * 0.9; // Reduzir 10% da altura
       break;
       
     case 'slab':
-      if (currentRatio > MAX_SLAB_STEEL_RATIO) {
-        recommendedRatio = MAX_SLAB_STEEL_RATIO;
-        potentialSavings = (currentRatio - recommendedRatio) * width * length * ((element.dimensions.thickness ?? 0) / 100) * STEEL_DENSITY;
-      }
+      // Manter dimensões atuais
       break;
   }
   
-  return { recommendedRatio, potentialSavings };
-}
-
-function calculateDimensionOptimization(element: StructuralElement): { recommendedDimensions: string; potentialSavings: number } {
-  let recommendedDimensions = '';
-  let potentialSavings = 0;
+  // Calcular volume otimizado
+  const optimizedVolume = optimizedWidth * optimizedHeight * length * CONCRETE_DENSITY;
   
-  // Implementar lógica de otimização de dimensões
-  // Baseado em cargas e vãos
-  if (element.type === 'slab' && element.dimensions.thickness && element.dimensions.thickness > 12) {
-    recommendedDimensions = `${element.dimensions.width}x${element.dimensions.length}x10`;
-    potentialSavings = (element.dimensions.thickness - 10) * element.dimensions.width * element.dimensions.length;
-  }
-  
-  return { recommendedDimensions, potentialSavings };
+  return {
+    recommendedDimensions: `${optimizedWidth.toFixed(2)}m x ${optimizedHeight.toFixed(2)}m x ${length.toFixed(2)}m`,
+    potentialSavings: currentVolume - optimizedVolume
+  };
 }
 
 function calculateTotalArea(elements: StructuralElement[]): number {
@@ -323,42 +359,44 @@ function calculateTotalArea(elements: StructuralElement[]): number {
   
   for (const element of elements) {
     const { width, length } = element.dimensions;
-    
-    switch (element.type) {
-      case 'pillar':
-        totalArea += width * length;
-        break;
-      case 'beam':
-        totalArea += width * length;
-        break;
-      case 'slab':
-        totalArea += width * length;
-        break;
-    }
+    totalArea += width * length;
   }
   
   return totalArea;
 }
 
 async function saveAnalysis(analysis: StructuralAnalysis): Promise<void> {
-  await executeQuery(
-    `INSERT INTO ProjectReports (
+  // Converter elementos para formato do banco de dados
+  const dbElements = analysis.elements.map(element => ({
+    ...element,
+    dimensions: JSON.stringify(element.dimensions),
+    materials: JSON.stringify(element.materials)
+  }));
+
+  // Inserir análise
+  const result = await executeQuery<IdResult>(`
+    INSERT INTO StructuralAnalyses (
       project_id, elements, total_area, total_concrete, total_steel,
       inconsistencies, optimizations, created_at, updated_at
-    ) VALUES (
+    )
+    VALUES (
       @projectId, @elements, @totalArea, @totalConcrete, @totalSteel,
       @inconsistencies, @optimizations, @createdAt, @updatedAt
-    )`,
-    {
-      projectId: analysis.projectId,
-      elements: JSON.stringify(analysis.elements),
-      totalArea: analysis.totalArea,
-      totalConcrete: analysis.totalConcrete,
-      totalSteel: analysis.totalSteel,
-      inconsistencies: JSON.stringify(analysis.inconsistencies),
-      optimizations: JSON.stringify(analysis.optimizations),
-      createdAt: analysis.createdAt,
-      updatedAt: analysis.updatedAt
-    }
-  );
+    );
+    SELECT SCOPE_IDENTITY() AS id;
+  `, {
+    projectId: analysis.projectId,
+    elements: JSON.stringify(dbElements),
+    totalArea: analysis.totalArea,
+    totalConcrete: analysis.totalConcrete,
+    totalSteel: analysis.totalSteel,
+    inconsistencies: JSON.stringify(analysis.inconsistencies),
+    optimizations: JSON.stringify(analysis.optimizations),
+    createdAt: analysis.createdAt,
+    updatedAt: analysis.updatedAt
+  });
+
+  if (!result[0]?.id) {
+    throw new Error('Failed to save analysis');
+  }
 } 

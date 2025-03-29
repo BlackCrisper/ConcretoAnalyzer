@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import { param } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { authenticate } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { checkRole } from '../middleware/checkRole';
 import { reportLimiter } from '../lib/rateLimit';
 import {
@@ -29,7 +29,7 @@ const shareValidation = [
 ];
 
 // Middleware de autenticação para todas as rotas
-router.use(authenticate);
+router.use(authMiddleware as RequestHandler);
 
 // Rotas
 router.post(
@@ -38,14 +38,14 @@ router.post(
   projectIdValidation,
   validateRequest,
   reportLimiter,
-  generateProjectReport
+  generateProjectReport as RequestHandler
 );
 
 router.get(
   '/:projectId',
   projectIdValidation,
   validateRequest,
-  getSharedReports
+  getSharedReports as RequestHandler
 );
 
 router.get(
@@ -53,7 +53,7 @@ router.get(
   projectIdValidation,
   reportIdValidation,
   validateRequest,
-  getReport
+  getReport as RequestHandler
 );
 
 router.get(
@@ -61,7 +61,7 @@ router.get(
   projectIdValidation,
   reportIdValidation,
   validateRequest,
-  downloadReport
+  downloadReport as RequestHandler
 );
 
 router.post(
@@ -71,7 +71,7 @@ router.post(
   reportIdValidation,
   shareValidation,
   validateRequest,
-  shareReport
+  shareReport as RequestHandler
 );
 
 export default router; 

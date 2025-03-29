@@ -1,7 +1,7 @@
 import express from 'express';
 import { param } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { authenticate } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { checkRole } from '../middleware/checkRole';
 import { analysisLimiter } from '../lib/rateLimit';
 import {
@@ -23,7 +23,7 @@ const analysisIdValidation = [
 ];
 
 // Middleware de autenticação para todas as rotas
-router.use(authenticate);
+router.use(authMiddleware as express.RequestHandler);
 
 // Rotas
 router.post(
@@ -32,7 +32,7 @@ router.post(
   projectIdValidation,
   validateRequest,
   analysisLimiter,
-  startAnalysis
+  startAnalysis as unknown as express.RequestHandler
 );
 
 router.get(
@@ -40,7 +40,7 @@ router.get(
   projectIdValidation,
   analysisIdValidation,
   validateRequest,
-  getAnalysisStatus
+  getAnalysisStatus as unknown as express.RequestHandler
 );
 
 router.get(
@@ -48,7 +48,7 @@ router.get(
   projectIdValidation,
   analysisIdValidation,
   validateRequest,
-  getAnalysisResults
+  getAnalysisResults as unknown as express.RequestHandler
 );
 
 router.post(
@@ -57,7 +57,7 @@ router.post(
   projectIdValidation,
   analysisIdValidation,
   validateRequest,
-  cancelAnalysis
+  cancelAnalysis as unknown as express.RequestHandler
 );
 
 export default router; 

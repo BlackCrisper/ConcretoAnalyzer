@@ -25,6 +25,22 @@ import {
   FiCalendar
 } from "react-icons/fi";
 
+interface KPIData {
+  projects: number;
+  users: number;
+  clients: number;
+  issues: number;
+  projectsLastMonth: number;
+  activeUsers: number;
+  monthlyData: number[];
+  clientTypes: number[];
+  projectStatus: number[];
+}
+
+interface KPIDataMap {
+  [key: string]: KPIData;
+}
+
 // Mock data for branches
 const mockBranches = [
   { id: "1", name: "Matriz", companyId: "1", companyName: "Empresa Principal" },
@@ -35,7 +51,7 @@ const mockBranches = [
 ];
 
 // Mock KPI data by branch
-const branchKpiData = {
+const branchKpiData: KPIDataMap = {
   "1": { // Matriz - Empresa Principal
     projects: 20,
     users: 3,
@@ -94,7 +110,7 @@ const branchKpiData = {
 };
 
 // Mock KPI data by company
-const companyKpiData = {
+const companyKpiData: KPIDataMap = {
   "1": { // Empresa Principal
     projects: 42,
     users: 6,
@@ -136,15 +152,35 @@ export default function Metricas() {
   );
 
   // Get the appropriate data based on selection
-  const getDataForCurrentView = () => {
-    if (selectedBranchId === "all") {
-      return companyKpiData[selectedCompanyId];
-    } else {
-      return branchKpiData[selectedBranchId];
-    }
+  const getCompanyData = (selectedCompanyId: string): KPIData => {
+    return companyKpiData[selectedCompanyId] || {
+      projects: 0,
+      users: 0,
+      clients: 0,
+      issues: 0,
+      projectsLastMonth: 0,
+      activeUsers: 0,
+      monthlyData: [],
+      clientTypes: [],
+      projectStatus: []
+    };
   };
 
-  const currentData = getDataForCurrentView();
+  const getBranchData = (selectedBranchId: string): KPIData => {
+    return branchKpiData[selectedBranchId] || {
+      projects: 0,
+      users: 0,
+      clients: 0,
+      issues: 0,
+      projectsLastMonth: 0,
+      activeUsers: 0,
+      monthlyData: [],
+      clientTypes: [],
+      projectStatus: []
+    };
+  };
+
+  const currentData = getCompanyData(selectedCompanyId);
 
   // Chart data setup
   const projectsTrendData = {

@@ -2,7 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
 import { register, login, refreshToken, logout, getProfile, updateProfile, forgotPassword, resetPassword, verifyEmail } from '../controllers/authController';
-import { authenticate } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -42,6 +42,6 @@ protectedRouter.post('/refresh-token', refreshToken);
 protectedRouter.get('/me', getProfile);
 protectedRouter.put('/me', validateRequest, updateProfile);
 
-router.use('/api', authenticate as express.RequestHandler, protectedRouter);
+router.use('/api', authMiddleware as express.RequestHandler, protectedRouter);
 
 export default router; 

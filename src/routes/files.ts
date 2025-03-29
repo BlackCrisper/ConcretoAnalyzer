@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { param } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { authenticate } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { checkRole } from '../middleware/checkRole';
 import { uploadLimiter } from '../lib/rateLimit';
 import {
@@ -51,7 +51,7 @@ const fileIdValidation = [
 ];
 
 // Middleware de autenticação para todas as rotas
-router.use(authenticate as RequestHandler);
+router.use(authMiddleware as RequestHandler);
 
 // Rotas
 router.post(

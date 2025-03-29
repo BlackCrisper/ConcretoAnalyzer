@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
       companyId,
       branchId,
       permissions: permissions || [],
-      company: '' // This will be set by the database based on companyId
+      company: '', // This will be set by the database based on companyId
+      branchName: null
     });
 
     if (!result.success) {

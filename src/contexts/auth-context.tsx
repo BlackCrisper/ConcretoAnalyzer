@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     // If no specific permissions, use role-based permissions
-    return roleBasePermissions[user.role]?.includes(permission) || false;
+    return roleBasePermissions[user.role as keyof typeof roleBasePermissions]?.includes(permission) || false;
   };
 
   // Check if user belongs to a specific branch
@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // If user data is stored in session, use it
         const parsedUser = JSON.parse(storedUser);
         if (!parsedUser.permissions) {
-          parsedUser.permissions = roleBasePermissions[parsedUser.role];
+          parsedUser.permissions = roleBasePermissions[parsedUser.role as keyof typeof roleBasePermissions] || [];
           parsedUser.branchId = parsedUser.role === 'superadmin' ? null : '1';
           parsedUser.branchName = parsedUser.role === 'superadmin' ? null : 'Matriz';
           sessionStorage.setItem('currentUser', JSON.stringify(parsedUser));

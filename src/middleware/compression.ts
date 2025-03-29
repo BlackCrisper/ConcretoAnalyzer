@@ -44,7 +44,7 @@ export function compressionMiddleware(req: Request, res: Response, next: NextFun
 
     // Log de compressão
     const originalEnd = res.end;
-    res.end = function(chunk: any, encoding?: string | (() => void), cb?: () => void) {
+    const newEnd = function(this: Response, chunk: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
       const contentLength = res.getHeader('content-length');
       const contentEncoding = res.getHeader('content-encoding');
 
@@ -58,11 +58,14 @@ export function compressionMiddleware(req: Request, res: Response, next: NextFun
       }
 
       if (typeof encoding === 'function') {
-        return originalEnd.call(this, chunk, encoding);
+        cb = encoding;
+        encoding = undefined;
       }
-      return originalEnd.call(this, chunk, encoding, cb);
+
+      return originalEnd.call(this, chunk, encoding as BufferEncoding, cb);
     };
 
+    res.end = newEnd;
     next();
   });
 }

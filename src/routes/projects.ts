@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 import { body, param } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { authenticate } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth';
 import { checkRole } from '../middleware/checkRole';
 import {
   createProject,
@@ -31,7 +31,7 @@ const projectIdValidation = [
 ];
 
 // Middleware de autenticação para todas as rotas
-router.use(authenticate as express.RequestHandler);
+router.use(authMiddleware as express.RequestHandler);
 
 // Rotas
 router.post(

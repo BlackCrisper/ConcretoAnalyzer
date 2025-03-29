@@ -25,8 +25,10 @@ import {
   FiZap,
   FiEdit,
   FiTrash2,
-  FiAlertTriangle
+  FiAlertTriangle,
+  FiSearch
 } from "react-icons/fi";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
 // Template types and interfaces
 interface ReportField {

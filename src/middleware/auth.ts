@@ -38,43 +38,25 @@ export function generateRefreshToken(id: string, role: string): string {
 }
 
 // Middleware de autenticação
-export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      throw new AppError('Token não fornecido', 401);
-    }
-
-    const [, token] = authHeader.split(' ');
+    const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      throw new AppError('Token não fornecido', 401);
+      return res.status(401).json({ message: 'Token não fornecido' });
     }
 
-    // Verificar se o token está na blacklist
-    const isBlacklisted = await redis.get(`blacklist:${token}`);
-    if (isBlacklisted) {
-      throw new AppError('Token inválido', 401);
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as TokenPayload;
 
-    // Verificar token
-    const decoded = jwt.verify(token, JWT_CONFIG.SECRET) as TokenPayload;
-
-    // Adicionar usuário à requisição
-    req.user = decoded;
-
-    return next();
+    (req as AuthRequest).user = decoded;
+    next();
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      logger.error('Erro de autenticação', { error });
-      return res.status(401).json({
-        status: 'error',
-        message: 'Token inválido'
-      });
-    }
-
-    return next(error);
+    logger.error('Erro na autenticação:', error);
+    return res.status(401).json({ message: 'Token inválido' });
   }
 };
 

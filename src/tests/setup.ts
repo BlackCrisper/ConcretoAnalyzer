@@ -1,11 +1,20 @@
 import { config } from 'dotenv';
 import path from 'path';
 
-// Carrega variáveis de ambiente para testes
-config({ path: path.join(__dirname, '../../.env.test') });
+// Carregar variáveis de ambiente do arquivo .env.test
+config({ path: path.resolve(__dirname, '../.env.test') });
 
-// Configuração do ambiente de teste
-process.env.NODE_ENV = 'test';
+// Configurar variáveis de ambiente para testes
+process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000/api';
+process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
+
+// Configurar timeouts para testes
+jest.setTimeout(30000);
+
+// Limpar mocks após cada teste
+afterEach(() => {
+  jest.clearAllMocks();
+});
 
 // Configuração do console para testes
 const originalConsole = { ...console };
@@ -21,9 +30,6 @@ afterAll(() => {
   console.warn = originalConsole.warn;
   console.debug = originalConsole.debug;
 });
-
-// Configuração de timeouts
-jest.setTimeout(30000);
 
 // Configuração de mocks globais
 jest.mock('../lib/db', () => ({

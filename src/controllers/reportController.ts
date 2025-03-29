@@ -1,10 +1,31 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { executeQuery } from '../lib/db';
 import { generateReport } from '../services/reportGenerationService';
-import path from 'path';
 import fs from 'fs/promises';
+import { AuthRequest } from '../middleware/auth';
 
-export async function generateProjectReport(req: Request, res: Response): Promise<void> {
+interface Project {
+  user_id: string;
+}
+
+interface Analysis {
+  id: string;
+  results: any;
+}
+
+interface Report {
+  id: string;
+  user_id: string;
+  status: string;
+  file_path?: string;
+  file_name?: string;
+}
+
+interface User {
+  id: string;
+}
+
+export async function generateProjectReport(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { projectId } = req.params;
     const userId = req.user?.id;
@@ -16,9 +37,9 @@ export async function generateProjectReport(req: Request, res: Response): Promis
     }
 
     // Verificar se o projeto existe e se o usuário tem acesso
-    const project = await executeQuery(
-      `SELECT user_id FROM Projects WHERE id = @projectId`,
-      { projectId }
+    const project = await executeQuery<Project>(
+      `SELECT user_id FROM Projects WHERE id = $1`,
+      [projectId]
     );
 
     if (!project[0]) {
@@ -32,14 +53,14 @@ export async function generateProjectReport(req: Request, res: Response): Promis
     }
 
     // Verificar se já existe uma análise concluída
-    const analysis = await executeQuery(
+    const analysis = await executeQuery<Analysis>(
       `SELECT id, results
        FROM ProjectReports
-       WHERE project_id = @projectId
+       WHERE project_id = $1
        AND status = 'completed'
        ORDER BY created_at DESC
        LIMIT 1`,
-      { projectId }
+      [projectId]
     );
 
     if (!analysis[0]) {
@@ -48,30 +69,24 @@ export async function generateProjectReport(req: Request, res: Response): Promis
     }
 
     // Criar registro do relatório
-    const result = await executeQuery(
+    const result = await executeQuery<{ id: string }>(
       `INSERT INTO ProjectReports (project_id, type, status, created_by)
-       OUTPUT INSERTED.id
-       VALUES (@projectId, 'report', 'processing', @userId)`,
-      {
-        projectId,
-        userId
-      }
+       RETURNING id
+       VALUES ($1, 'report', 'processing', $2)`,
+      [projectId, userId]
     );
 
     const reportId = result[0].id;
 
     // Gerar relatório em background
-    generateReport(projectId, analysis[0].results).catch(error => {
+    generateReport(projectId).catch(error => {
       console.error('Error generating report:', error);
       executeQuery(
         `UPDATE ProjectReports
          SET status = 'error',
-             error_message = @error
-         WHERE id = @reportId`,
-        {
-          reportId,
-          error: error.message
-        }
+             error_message = $1
+         WHERE id = $2`,
+        [error.message, reportId]
       );
     });
 
@@ -89,7 +104,7 @@ export async function generateProjectReport(req: Request, res: Response): Promis
   }
 }
 
-export async function getReport(req: Request, res: Response): Promise<void> {
+export async function getReport(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -101,13 +116,13 @@ export async function getReport(req: Request, res: Response): Promise<void> {
     }
 
     // Verificar se o relatório existe e se o usuário tem acesso
-    const report = await executeQuery(
+    const report = await executeQuery<Report>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id
+       WHERE r.id = $1
        AND r.type = 'report'`,
-      { id }
+      [id]
     );
 
     if (!report[0]) {
@@ -127,7 +142,7 @@ export async function getReport(req: Request, res: Response): Promise<void> {
   }
 }
 
-export async function downloadReport(req: Request, res: Response): Promise<void> {
+export async function downloadReport(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -139,13 +154,13 @@ export async function downloadReport(req: Request, res: Response): Promise<void>
     }
 
     // Verificar se o relatório existe e se o usuário tem acesso
-    const report = await executeQuery(
+    const report = await executeQuery<Report>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id
+       WHERE r.id = $1
        AND r.type = 'report'`,
-      { id }
+      [id]
     );
 
     if (!report[0]) {
@@ -165,20 +180,20 @@ export async function downloadReport(req: Request, res: Response): Promise<void>
 
     // Verificar se o arquivo existe fisicamente
     try {
-      await fs.access(report[0].file_path);
+      await fs.access(report[0].file_path!);
     } catch (error) {
       res.status(404).json({ error: 'Arquivo do relatório não encontrado no servidor' });
       return;
     }
 
-    res.download(report[0].file_path, report[0].file_name);
+    res.download(report[0].file_path!, report[0].file_name!);
   } catch (error) {
     console.error('Error downloading report:', error);
     res.status(500).json({ error: 'Erro ao baixar relatório' });
   }
 }
 
-export async function shareReport(req: Request, res: Response): Promise<void> {
+export async function shareReport(req: AuthRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const { email, role } = req.body;
@@ -191,13 +206,13 @@ export async function shareReport(req: Request, res: Response): Promise<void> {
     }
 
     // Verificar se o relatório existe e se o usuário tem acesso
-    const report = await executeQuery(
+    const report = await executeQuery<Report>(
       `SELECT r.*, p.user_id
        FROM ProjectReports r
        JOIN Projects p ON r.project_id = p.id
-       WHERE r.id = @id
+       WHERE r.id = $1
        AND r.type = 'report'`,
-      { id }
+      [id]
     );
 
     if (!report[0]) {
@@ -215,10 +230,10 @@ export async function shareReport(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Verificar se o usuário existe
-    const user = await executeQuery(
-      `SELECT id FROM Users WHERE email = @email`,
-      { email }
+    // Buscar usuário pelo email
+    const user = await executeQuery<User>(
+      `SELECT id FROM Users WHERE email = $1`,
+      [email]
     );
 
     if (!user[0]) {
@@ -226,26 +241,30 @@ export async function shareReport(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Criar compartilhamento
+    // Compartilhar relatório
     await executeQuery(
-      `INSERT INTO ReportShares (report_id, user_id, role)
-       VALUES (@reportId, @sharedUserId, @role)`,
-      {
-        reportId: id,
-        sharedUserId: user[0].id,
-        role
-      }
+      `INSERT INTO SharedReports (report_id, shared_user_id, access_level)
+       VALUES ($1, $2, $3)`,
+      [id, user[0].id, role]
     );
 
-    res.json({ message: 'Relatório compartilhado com sucesso' });
+    res.json({
+      message: 'Relatório compartilhado com sucesso',
+      sharedWith: {
+        reportId: id,
+        sharedUserId: user[0].id,
+        accessLevel: role
+      }
+    });
   } catch (error) {
     console.error('Error sharing report:', error);
     res.status(500).json({ error: 'Erro ao compartilhar relatório' });
   }
 }
 
-export async function getSharedReports(req: Request, res: Response): Promise<void> {
+export async function getSharedReports(req: AuthRequest, res: Response): Promise<void> {
   try {
+    const { projectId } = req.params;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -253,17 +272,15 @@ export async function getSharedReports(req: Request, res: Response): Promise<voi
       return;
     }
 
-    const reports = await executeQuery(
-      `SELECT r.*, p.name as project_name, u.name as owner_name
+    // Buscar relatórios compartilhados
+    const reports = await executeQuery<Report>(
+      `SELECT r.*
        FROM ProjectReports r
-       JOIN Projects p ON r.project_id = p.id
-       JOIN Users u ON p.user_id = u.id
-       JOIN ReportShares s ON r.id = s.report_id
-       WHERE s.user_id = @userId
-       AND r.type = 'report'
-       AND r.status = 'completed'
-       ORDER BY r.created_at DESC`,
-      { userId }
+       JOIN SharedReports sr ON r.id = sr.report_id
+       WHERE r.project_id = $1
+       AND sr.shared_user_id = $2
+       AND r.type = 'report'`,
+      [projectId, userId]
     );
 
     res.json(reports);

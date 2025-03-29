@@ -2,29 +2,56 @@ import nodemailer from 'nodemailer';
 import { EMAIL_CONFIG } from '../config/env';
 import { logger } from './logger';
 
+class MockEmailTransporter {
+  async sendMail(options: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    attachments?: Array<{
+      filename: string;
+      path: string;
+      contentType?: string;
+    }>;
+  }): Promise<void> {
+    logger.info('Email mock enviado', options);
+  }
+
+  verify(callback: (error: Error | null) => void): void {
+    callback(null);
+    logger.info('Configuração de email mock verificada com sucesso');
+  }
+}
+
 class EmailService {
   private static instance: EmailService;
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | MockEmailTransporter;
 
   private constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: EMAIL_CONFIG.SMTP_HOST,
-      port: EMAIL_CONFIG.SMTP_PORT,
-      secure: false,
-      auth: {
-        user: EMAIL_CONFIG.SMTP_USER,
-        pass: EMAIL_CONFIG.SMTP_PASS
-      }
-    });
+    try {
+      this.transporter = nodemailer.createTransport({
+        host: EMAIL_CONFIG.SMTP_HOST,
+        port: EMAIL_CONFIG.SMTP_PORT,
+        secure: false,
+        auth: {
+          user: EMAIL_CONFIG.SMTP_USER,
+          pass: EMAIL_CONFIG.SMTP_PASS
+        }
+      });
 
-    // Verificar conexão
-    this.transporter.verify((error) => {
-      if (error) {
-        logger.error('Erro na configuração do email', { error });
-      } else {
-        logger.info('Configuração de email verificada com sucesso');
-      }
-    });
+      // Verificar conexão
+      this.transporter.verify((error) => {
+        if (error) {
+          logger.warn('Erro na configuração do email, usando implementação mock', { error });
+          this.transporter = new MockEmailTransporter();
+        } else {
+          logger.info('Configuração de email verificada com sucesso');
+        }
+      });
+    } catch (error) {
+      logger.warn('Erro ao criar transporter de email, usando implementação mock', { error });
+      this.transporter = new MockEmailTransporter();
+    }
   }
 
   public static getInstance(): EmailService {

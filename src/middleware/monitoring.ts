@@ -20,16 +20,17 @@ const metrics: Metrics[] = [];
 // Limite de métricas armazenadas
 const MAX_METRICS = 1000;
 
-// Middleware de monitoramento
-export function monitoringMiddleware(req: Request, res: Response, next: NextFunction) {
-  const start = Date.now();
-  const requestSize = parseInt(req.headers['content-length'] || '0');
-
-  // Interceptar resposta
-  const originalEnd = res.end;
-  res.end = function(chunk: any, encoding?: string | (() => void), cb?: () => void) {
+// Função auxiliar para substituir res.end
+function createEndHandler(
+  originalEnd: any,
+  req: Request,
+  start: number,
+  requestSize: number,
+  additionalMetrics?: (duration: number) => void
+) {
+  return function(this: Response, chunk: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
     const duration = Date.now() - start;
-    const contentLength = res.getHeader('content-length');
+    const contentLength = this.getHeader('content-length');
     const responseSize = typeof contentLength === 'string' ? parseInt(contentLength) : 0;
 
     // Coletar métricas
@@ -38,7 +39,7 @@ export function monitoringMiddleware(req: Request, res: Response, next: NextFunc
       path: req.path,
       method: req.method,
       duration,
-      statusCode: res.statusCode,
+      statusCode: this.statusCode,
       ip: req.ip,
       userAgent: req.headers['user-agent'] || 'unknown',
       requestSize,
@@ -58,11 +59,28 @@ export function monitoringMiddleware(req: Request, res: Response, next: NextFunc
       method: req.method
     });
 
-    if (typeof encoding === 'function') {
-      return originalEnd.call(this, chunk, encoding);
+    // Executar métricas adicionais se fornecidas
+    if (additionalMetrics) {
+      additionalMetrics(duration);
     }
-    return originalEnd.call(this, chunk, encoding, cb);
+
+    if (typeof encoding === 'function') {
+      cb = encoding;
+      encoding = undefined;
+    }
+
+    return originalEnd.call(this, chunk, encoding as BufferEncoding, cb);
   };
+}
+
+// Middleware de monitoramento
+export function monitoringMiddleware(req: Request, res: Response, next: NextFunction) {
+  const start = Date.now();
+  const requestSize = parseInt(req.headers['content-length'] || '0');
+
+  // Interceptar resposta
+  const originalEnd = res.end;
+  res.end = createEndHandler(originalEnd, req, start, requestSize);
 
   next();
 }
@@ -85,11 +103,11 @@ export function errorMonitoringMiddleware(err: Error, req: Request, _res: Respon
 export function performanceMonitoringMiddleware(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
   const startMemory = process.memoryUsage();
+  const requestSize = parseInt(req.headers['content-length'] || '0');
 
   // Interceptar resposta
   const originalEnd = res.end;
-  res.end = function(chunk: any, encoding?: string | (() => void), cb?: () => void) {
-    const duration = Date.now() - start;
+  res.end = createEndHandler(originalEnd, req, start, requestSize, (duration) => {
     const endMemory = process.memoryUsage();
 
     // Calcular uso de memória
@@ -107,12 +125,7 @@ export function performanceMonitoringMiddleware(req: Request, res: Response, nex
       path: req.path,
       method: req.method
     });
-
-    if (typeof encoding === 'function') {
-      return originalEnd.call(this, chunk, encoding);
-    }
-    return originalEnd.call(this, chunk, encoding, cb);
-  };
+  });
 
   next();
 }
@@ -121,11 +134,11 @@ export function performanceMonitoringMiddleware(req: Request, res: Response, nex
 export function resourceMonitoringMiddleware(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
   const startCpu = process.cpuUsage();
+  const requestSize = parseInt(req.headers['content-length'] || '0');
 
   // Interceptar resposta
   const originalEnd = res.end;
-  res.end = function(chunk: any, encoding?: string | (() => void), cb?: () => void) {
-    const duration = Date.now() - start;
+  res.end = createEndHandler(originalEnd, req, start, requestSize, (duration) => {
     const endCpu = process.cpuUsage(startCpu);
 
     // Log de recursos
@@ -135,12 +148,7 @@ export function resourceMonitoringMiddleware(req: Request, res: Response, next: 
       path: req.path,
       method: req.method
     });
-
-    if (typeof encoding === 'function') {
-      return originalEnd.call(this, chunk, encoding);
-    }
-    return originalEnd.call(this, chunk, encoding, cb);
-  };
+  });
 
   next();
 }

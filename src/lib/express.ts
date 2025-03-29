@@ -1,60 +1,60 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import compression from 'compression';
+import helmet from 'helmet';
 import morgan from 'morgan';
-import { json, urlencoded } from 'body-parser';
-import { errorHandler } from '../middleware/errorHandler';
-import { notFoundHandler } from '../middleware/notFoundHandler';
-import { authenticateToken } from '../middleware/auth';
-import { checkRole } from '../middleware/checkRole';
+import multer from 'multer';
+import { logger } from './logger';
+import { errorHandler } from '../middleware/error';
+import { monitoringMiddleware } from '../middleware/monitoring';
+import { rateLimiter } from '../middleware/rateLimiter';
 import { validateRequest } from '../middleware/validateRequest';
-import { upload } from './multer';
+import { authMiddleware } from '../middleware/auth';
 
-// Importar rotas
-import authRoutes from '../routes/auth';
-import userRoutes from '../routes/users';
-import projectRoutes from '../routes/projects';
-import fileRoutes from '../routes/files';
-import analysisRoutes from '../routes/analysis';
-import reportRoutes from '../routes/reports';
+const app = express();
 
-export function createApp() {
-  const app = express();
+// Configuração do multer para upload de arquivos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix);
+  }
+});
 
-  // Middleware básico
-  app.use(helmet());
-  app.use(cors());
-  app.use(compression());
-  app.use(morgan('dev'));
-  app.use(json());
-  app.use(urlencoded({ extended: true }));
+const upload = multer({ storage });
 
-  // Rotas públicas
-  app.use('/api/auth', authRoutes);
+// Middlewares
+app.use(cors());
+app.use(compression());
+app.use(helmet());
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(monitoringMiddleware);
+app.use(rateLimiter);
+app.use(validateRequest);
 
-  // Middleware de autenticação para rotas protegidas
-  app.use('/api', authenticateToken);
+// Rotas
+app.use('/api/auth', require('../app/api/auth/route'));
+app.use('/api/users', authMiddleware as express.RequestHandler, require('../app/api/users/route'));
+app.use('/api/companies', authMiddleware as express.RequestHandler, require('../app/api/companies/route'));
+app.use('/api/branches', authMiddleware as express.RequestHandler, require('../app/api/branches/route'));
+app.use('/api/structural-analysis', authMiddleware as express.RequestHandler, require('../app/api/structural-analysis/route'));
+app.use('/api/reports', authMiddleware as express.RequestHandler, require('../app/api/reports/route'));
+app.use('/api/files', authMiddleware as express.RequestHandler, require('../app/api/files/route'));
+app.use('/api/invitations', authMiddleware as express.RequestHandler, require('../app/api/invitations/route'));
+app.use('/api/notifications', authMiddleware as express.RequestHandler, require('../app/api/notifications/route'));
 
-  // Rotas protegidas
-  app.use('/api/users', userRoutes);
-  app.use('/api/projects', projectRoutes);
-  app.use('/api/files', fileRoutes);
-  app.use('/api/analysis', analysisRoutes);
-  app.use('/api/reports', reportRoutes);
+// Rota de upload
+app.use('/api/upload', upload.single('file'));
 
-  // Middleware de validação
-  app.use(validateRequest);
+// Middleware de erro
+app.use(errorHandler);
 
-  // Middleware de upload de arquivos
-  app.use('/api/upload', upload.single('file'));
-
-  // Middleware de tratamento de erros
-  app.use(notFoundHandler);
-  app.use(errorHandler);
-
-  return app;
-}
+export default app;
 
 // Função para iniciar o servidor
 export function startServer(app: express.Application, port: number) {
