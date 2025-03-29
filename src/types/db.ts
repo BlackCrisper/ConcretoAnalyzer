@@ -1,5 +1,13 @@
 import { Pool, PoolClient, QueryResult } from 'pg';
-import { User, Project, ProjectFile, StructuralElement, StructuralAnalysis, ProjectReport, SharedReport } from './project';
+import {
+  User,
+  Project,
+  ProjectFile,
+  StructuralElement,
+  StructuralAnalysis,
+  ProjectReport,
+  SharedReport,
+} from './project';
 
 export interface DatabaseConfig {
   host: string;
@@ -92,4 +100,4 @@ export type ProjectFileResult = QueryResult<ProjectFileQuery>;
 export type StructuralElementResult = QueryResult<StructuralElementQuery>;
 export type StructuralAnalysisResult = QueryResult<StructuralAnalysisQuery>;
 export type ProjectReportResult = QueryResult<ProjectReportQuery>;
-export type SharedReportResult = QueryResult<SharedReportQuery>; 
+export type SharedReportResult = QueryResult<SharedReportQuery>;

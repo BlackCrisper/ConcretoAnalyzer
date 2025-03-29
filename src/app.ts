@@ -4,7 +4,13 @@ import compression from 'compression';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { logger } from './lib/logger';
-import { authMiddleware, validateRequest, errorHandler, monitoringMiddleware, rateLimiter } from './middleware';
+import {
+  authMiddleware,
+  validateRequest,
+  errorHandler,
+  monitoringMiddleware,
+  rateLimiter,
+} from './middleware';
 import authRoutes from './routes/auth';
 import projectRoutes from './routes/projects';
 import fileRoutes from './routes/files';
@@ -30,7 +36,7 @@ app.get('/', (_, res) => {
   res.json({
     message: 'API está funcionando!',
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -45,7 +51,7 @@ app.use('/api/reports', authMiddleware as express.RequestHandler, reportRoutes);
 app.get('/health', (_, res) => {
   res.json({
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -53,7 +59,7 @@ app.get('/health', (_, res) => {
 app.use(errorHandler);
 
 // Tratamento de erros não capturados
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Erro não capturado', { error });
   process.exit(1);
 });
@@ -63,4 +69,4 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-export default app; 
+export default app;

@@ -6,12 +6,7 @@ import { validateRequest } from '../middleware/validateRequest';
 import { authMiddleware } from '../middleware/auth';
 import { checkRole } from '../middleware/checkRole';
 import { uploadLimiter } from '../lib/rateLimit';
-import {
-  uploadFile,
-  getFiles,
-  getFile,
-  deleteFile
-} from '../controllers/fileController';
+import { uploadFile, getFiles, getFile, deleteFile } from '../controllers/fileController';
 
 const router = express.Router();
 
@@ -21,15 +16,15 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+  },
 });
 
 const upload = multer({
   storage,
   limits: {
-    fileSize: Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 // 10MB
+    fileSize: Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB
   },
   fileFilter: (_req, file, cb) => {
     const allowedTypes = (process.env.ALLOWED_FILE_TYPES || 'pdf,image/*,dwg').split(',');
@@ -38,17 +33,13 @@ const upload = multer({
     } else {
       cb(new Error('Tipo de arquivo não permitido'));
     }
-  }
+  },
 });
 
 // Validações
-const projectIdValidation = [
-  param('projectId').isUUID().withMessage('ID de projeto inválido')
-];
+const projectIdValidation = [param('projectId').isUUID().withMessage('ID de projeto inválido')];
 
-const fileIdValidation = [
-  param('fileId').isUUID().withMessage('ID de arquivo inválido')
-];
+const fileIdValidation = [param('fileId').isUUID().withMessage('ID de arquivo inválido')];
 
 // Middleware de autenticação para todas as rotas
 router.use(authMiddleware as RequestHandler);
@@ -64,20 +55,9 @@ router.post(
   uploadFile
 );
 
-router.get(
-  '/:projectId',
-  projectIdValidation,
-  validateRequest,
-  getFiles
-);
+router.get('/:projectId', projectIdValidation, validateRequest, getFiles);
 
-router.get(
-  '/:projectId/:fileId',
-  projectIdValidation,
-  fileIdValidation,
-  validateRequest,
-  getFile
-);
+router.get('/:projectId/:fileId', projectIdValidation, fileIdValidation, validateRequest, getFile);
 
 router.delete(
   '/:projectId/:fileId',
@@ -88,4 +68,4 @@ router.delete(
   deleteFile
 );
 
-export default router; 
+export default router;

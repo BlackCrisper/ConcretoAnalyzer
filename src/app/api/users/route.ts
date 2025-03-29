@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
         company,
         companyId,
         branchId,
-        branchName
-      }))
+        branchName,
+      })),
     });
   } catch (error) {
     console.error('Error getting users:', error);
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Campos obrigatórios não fornecidos'
+          message: 'Campos obrigatórios não fornecidos',
         },
         { status: 400 }
       );
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       branchId,
       permissions: permissions || [],
       company: '', // This will be set by the database based on companyId
-      branchName: null
+      branchName: null,
     });
 
     if (!result.success) {
@@ -69,14 +69,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Usuário criado com sucesso',
-      userId: result.userId
+      userId: result.userId,
     });
   } catch (error) {
     console.error('Error creating user:', error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao criar usuário' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao criar usuário' }, { status: 500 });
   }
 }

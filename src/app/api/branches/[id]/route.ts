@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getBranchById, updateBranch, deleteBranch } from '@/services/branchService';
 
 // Get branch by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const branchId = params.id;
     const branch = await getBranchById(branchId);
@@ -19,23 +16,17 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      branch
+      branch,
     });
   } catch (error) {
     console.error(`Error getting branch ${params.id}:`, error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao obter filial' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao obter filial' }, { status: 500 });
   }
 }
 
 // Update branch
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const branchId = params.id;
     const body = await request.json();
@@ -61,7 +52,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Filial atualizada com sucesso'
+      message: 'Filial atualizada com sucesso',
     });
   } catch (error) {
     console.error(`Error updating branch ${params.id}:`, error);
@@ -74,10 +65,7 @@ export async function PUT(
 }
 
 // Delete branch
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const branchId = params.id;
 
@@ -102,7 +90,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Filial excluída com sucesso'
+      message: 'Filial excluída com sucesso',
     });
   } catch (error) {
     console.error(`Error deleting branch ${params.id}:`, error);

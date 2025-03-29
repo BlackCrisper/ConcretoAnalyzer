@@ -25,7 +25,7 @@ class MonitoringService {
       responseTime: [],
       memoryUsage: [],
       cpuUsage: [],
-      activeConnections: 0
+      activeConnections: 0,
     };
     this.startTime = Date.now();
     this.metricsInterval = null;
@@ -39,7 +39,7 @@ class MonitoringService {
   }
 
   // Iniciar coleta de métricas
-  public startMetricsCollection(interval: number = 60000): void {
+  public startMetricsCollection(interval = 60000): void {
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
     }
@@ -81,7 +81,7 @@ class MonitoringService {
       cpuUsage,
       requestCount: this.metrics.requestCount,
       errorCount: this.metrics.errorCount,
-      activeConnections: this.metrics.activeConnections
+      activeConnections: this.metrics.activeConnections,
     });
   }
 
@@ -114,7 +114,7 @@ class MonitoringService {
     const uptime = Date.now() - this.startTime;
     return {
       ...this.metrics,
-      uptime
+      uptime,
     };
   }
 
@@ -139,7 +139,7 @@ class MonitoringService {
       responseTime: [],
       memoryUsage: [],
       cpuUsage: [],
-      activeConnections: 0
+      activeConnections: 0,
     };
     logger.info('Métricas resetadas');
   }
@@ -164,4 +164,4 @@ export const monitoringMiddleware = (_: any, res: any, next: any) => {
 };
 
 // Exportar instância do serviço
-export const monitoring = MonitoringService.getInstance(); 
+export const monitoring = MonitoringService.getInstance();

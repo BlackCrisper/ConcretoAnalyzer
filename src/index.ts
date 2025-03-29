@@ -61,7 +61,7 @@ app.use((err: any, _: express.Request, res: express.Response) => {
   logger.error('Erro não tratado', { error: err });
   res.status(500).json({
     error: 'Erro interno do servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
 
@@ -106,7 +106,7 @@ async function startServer() {
 }
 
 // Tratamento de erros não capturados
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Erro não capturado', { error });
   process.exit(1);
 });
@@ -116,4 +116,4 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Iniciar servidor
-startServer(); 
+startServer();

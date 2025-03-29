@@ -8,10 +8,7 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json(
-        { success: false, message: 'Email é obrigatório' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: 'Email é obrigatório' }, { status: 400 });
     }
 
     // Verificar se o usuário existe
@@ -39,7 +36,7 @@ export async function POST(request: NextRequest) {
       {
         userId: users[0].id,
         token: resetToken,
-        expiresAt: tokenExpiry
+        expiresAt: tokenExpiry,
       }
     );
 
@@ -55,9 +52,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Email de recuperação enviado com sucesso'
+      message: 'Email de recuperação enviado com sucesso',
     });
-
   } catch (error) {
     console.error('Forgot password error:', error);
     return NextResponse.json(
@@ -65,4 +61,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

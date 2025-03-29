@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { executeQuery } from '@/lib/db';
 
@@ -30,7 +30,7 @@ export async function getAllPermissions(): Promise<Permission[]> {
       id: p.id,
       code: p.permission_code,
       description: p.description,
-      category: p.category
+      category: p.category,
     }));
   } catch (error) {
     console.error('Error getting permissions:', error);
@@ -77,18 +77,21 @@ export async function getPermissionsByIds(ids: string[]): Promise<Permission[]> 
       category: string;
     }
 
-    const permissions = await executeQuery<DBPermission>(`
+    const permissions = await executeQuery<DBPermission>(
+      `
       SELECT id, permission_code, description, category
       FROM Permissions
       WHERE id IN (${placeholders})
       ORDER BY category, description
-    `, params);
+    `,
+      params
+    );
 
     return permissions.map(p => ({
       id: p.id,
       code: p.permission_code,
       description: p.description,
-      category: p.category
+      category: p.category,
     }));
   } catch (error) {
     console.error('Error getting permissions by ids:', error);
@@ -117,18 +120,21 @@ export async function getPermissionsByCodes(codes: string[]): Promise<Permission
       category: string;
     }
 
-    const permissions = await executeQuery<DBPermission>(`
+    const permissions = await executeQuery<DBPermission>(
+      `
       SELECT id, permission_code, description, category
       FROM Permissions
       WHERE permission_code IN (${placeholders})
       ORDER BY category, description
-    `, params);
+    `,
+      params
+    );
 
     return permissions.map(p => ({
       id: p.id,
       code: p.permission_code,
       description: p.description,
-      category: p.category
+      category: p.category,
     }));
   } catch (error) {
     console.error('Error getting permissions by codes:', error);

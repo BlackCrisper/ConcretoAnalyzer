@@ -41,7 +41,7 @@ export async function createNotification(
         message,
         type,
         read: false,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
     }
 
@@ -98,4 +98,4 @@ export async function deleteNotification(notificationId: string): Promise<boolea
     logger.error('Error deleting notification:', error);
     return false;
   }
-} 
+}

@@ -9,7 +9,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   credentials: true,
-  maxAge: 86400 // 24 horas
+  maxAge: 86400, // 24 horas
 };
 
 // Configuração do Helmet
@@ -24,7 +24,7 @@ const helmetOptions = {
   ieNoOpen: false,
   noSniff: true,
   referrerPolicy: false,
-  xssFilter: true
+  xssFilter: true,
 };
 
 // Middleware CORS
@@ -49,9 +49,14 @@ export const ipValidationMiddleware = (req: any, res: any, next: any) => {
 // Middleware para validação de User-Agent
 export const userAgentValidationMiddleware = (req: any, res: any, next: any) => {
   const userAgent = req.get('user-agent');
-  const blockedAgents = process.env.BLOCKED_USER_AGENTS ? process.env.BLOCKED_USER_AGENTS.split(',') : [];
+  const blockedAgents = process.env.BLOCKED_USER_AGENTS
+    ? process.env.BLOCKED_USER_AGENTS.split(',')
+    : [];
 
-  if (!userAgent || blockedAgents.some(agent => userAgent.toLowerCase().includes(agent.toLowerCase()))) {
+  if (
+    !userAgent ||
+    blockedAgents.some(agent => userAgent.toLowerCase().includes(agent.toLowerCase()))
+  ) {
     logger.warn('Acesso bloqueado por User-Agent', { userAgent });
     return res.status(403).json({ error: 'Acesso negado' });
   }
@@ -116,5 +121,5 @@ export const securityMiddlewares = [
   ipValidationMiddleware,
   userAgentValidationMiddleware,
   sanitizeMiddleware,
-  securityHeadersMiddleware
-]; 
+  securityHeadersMiddleware,
+];

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      invitations
+      invitations,
     });
   } catch (error) {
     console.error('Error getting invitations:', error);
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Email e role são obrigatórios'
+          message: 'Email e role são obrigatórios',
         },
         { status: 400 }
       );
@@ -49,14 +49,14 @@ export async function POST(request: NextRequest) {
         role,
         branchId,
         permissions: permissions || [],
-        expiresAt
+        expiresAt,
       });
 
       // Return the created invitation
       return NextResponse.json({
         success: true,
         message: 'Convite criado com sucesso',
-        invitation
+        invitation,
       });
     } catch (invitationError) {
       console.error('Error creating invitation:', invitationError);
@@ -69,9 +69,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating invitation:', error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao criar convite' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao criar convite' }, { status: 500 });
   }
 }

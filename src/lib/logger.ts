@@ -14,10 +14,7 @@ const formats = winston.format.combine(
   winston.format.errors({ stack: true }),
   LOG_CONFIG.FORMAT === 'json'
     ? winston.format.json()
-    : winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
+    : winston.format.combine(winston.format.colorize(), winston.format.simple())
 );
 
 // Configurar transportes
@@ -26,23 +23,20 @@ const transports: winston.transport[] = [
     filename: path.join(logDir, 'error.log'),
     level: 'error',
     maxsize: LOG_CONFIG.MAX_SIZE,
-    maxFiles: LOG_CONFIG.MAX_FILES
+    maxFiles: LOG_CONFIG.MAX_FILES,
   }),
   new winston.transports.File({
     filename: path.join(logDir, 'combined.log'),
     maxsize: LOG_CONFIG.MAX_SIZE,
-    maxFiles: LOG_CONFIG.MAX_FILES
-  })
+    maxFiles: LOG_CONFIG.MAX_FILES,
+  }),
 ];
 
 // Adicionar console em desenvolvimento
 if (process.env.NODE_ENV !== 'production') {
   transports.push(
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
     })
   );
 }
@@ -52,7 +46,7 @@ export const logger = winston.createLogger({
   level: LOG_CONFIG.LEVEL,
   format: formats,
   transports,
-  exitOnError: false
+  exitOnError: false,
 });
 
 // Função para criar um logger específico para um módulo
@@ -65,10 +59,10 @@ export function createLogger(module: string) {
       new winston.transports.File({
         filename: path.join(LOG_CONFIG.DIR, `${module}.log`),
         maxsize: LOG_CONFIG.MAX_SIZE,
-        maxFiles: LOG_CONFIG.MAX_FILES
-      })
+        maxFiles: LOG_CONFIG.MAX_FILES,
+      }),
     ],
-    defaultMeta: { module }
+    defaultMeta: { module },
   });
 }
 
@@ -81,9 +75,9 @@ export function createHttpLogger() {
       new winston.transports.File({
         filename: path.join(LOG_CONFIG.DIR, 'http.log'),
         maxsize: LOG_CONFIG.MAX_SIZE,
-        maxFiles: LOG_CONFIG.MAX_FILES
-      })
-    ]
+        maxFiles: LOG_CONFIG.MAX_FILES,
+      }),
+    ],
   });
 }
 
@@ -98,7 +92,7 @@ export const httpLogger = (req: any, res: any, next: any) => {
       status: res.statusCode,
       duration,
       ip: req.ip,
-      userAgent: req.get('user-agent')
+      userAgent: req.get('user-agent'),
     });
   });
   next();
@@ -116,7 +110,7 @@ export function logRequest(req: any, res: any, next: any) {
       status: res.statusCode,
       duration: `${duration}ms`,
       ip: req.ip,
-      userAgent: req.get('user-agent')
+      userAgent: req.get('user-agent'),
     });
   });
 
@@ -129,14 +123,16 @@ export function logError(error: Error, req?: any) {
     error: {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     },
-    request: req ? {
-      method: req.method,
-      url: req.url,
-      ip: req.ip,
-      userAgent: req.get('user-agent')
-    } : undefined
+    request: req
+      ? {
+          method: req.method,
+          url: req.url,
+          ip: req.ip,
+          userAgent: req.get('user-agent'),
+        }
+      : undefined,
   });
 }
 
@@ -148,7 +144,7 @@ export function logAccess(req: any, res: any) {
     status: res.statusCode,
     ip: req.ip,
     userAgent: req.get('user-agent'),
-    userId: req.user?.id
+    userId: req.user?.id,
   });
 }
 
@@ -157,7 +153,7 @@ export function logAuth(action: string, userId: string, ip: string) {
   logger.info('Authentication', {
     action,
     userId,
-    ip
+    ip,
   });
 }
 
@@ -166,7 +162,7 @@ export function logFileOperation(operation: string, fileId: string, userId: stri
   logger.info('File operation', {
     operation,
     fileId,
-    userId
+    userId,
   });
 }
 
@@ -175,7 +171,7 @@ export function logAnalysis(projectId: string, userId: string, status: string) {
   logger.info('Structural analysis', {
     projectId,
     userId,
-    status
+    status,
   });
 }
 
@@ -184,7 +180,7 @@ export function logReport(projectId: string, userId: string, status: string) {
   logger.info('Report generation', {
     projectId,
     userId,
-    status
+    status,
   });
 }
 
@@ -193,7 +189,7 @@ export function logShare(reportId: string, sharedBy: string, sharedWith: string)
   logger.info('Report shared', {
     reportId,
     sharedBy,
-    sharedWith
+    sharedWith,
   });
 }
 
@@ -202,7 +198,7 @@ export function logCache(operation: string, key: string, hit: boolean) {
   logger.debug('Cache operation', {
     operation,
     key,
-    hit
+    hit,
   });
 }
 
@@ -210,6 +206,6 @@ export function logCache(operation: string, key: string, hit: boolean) {
 export function logPerformance(operation: string, duration: number) {
   logger.debug('Performance', {
     operation,
-    duration: `${duration}ms`
+    duration: `${duration}ms`,
   });
-} 
+}

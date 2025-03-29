@@ -48,7 +48,7 @@ class AuthService {
   public generateAccessToken = (payload: TokenPayload): string => {
     try {
       const options: SignOptions = {
-        expiresIn: JWT_CONFIG.EXPIRES_IN as unknown as StringValue
+        expiresIn: JWT_CONFIG.EXPIRES_IN as unknown as StringValue,
       };
       return jwt.sign(payload, JWT_CONFIG.SECRET, options);
     } catch (error) {
@@ -60,7 +60,7 @@ class AuthService {
   public generateRefreshToken = (payload: TokenPayload): string => {
     try {
       const options: SignOptions = {
-        expiresIn: JWT_CONFIG.REFRESH_EXPIRES_IN as unknown as StringValue
+        expiresIn: JWT_CONFIG.REFRESH_EXPIRES_IN as unknown as StringValue,
       };
       return jwt.sign(payload, JWT_CONFIG.REFRESH_SECRET, options);
     } catch (error) {
@@ -93,7 +93,7 @@ class AuthService {
   } {
     return {
       accessToken: this.generateAccessToken(payload),
-      refreshToken: this.generateRefreshToken(payload)
+      refreshToken: this.generateRefreshToken(payload),
     };
   }
 
@@ -157,4 +157,4 @@ export const authorizeById = (paramName: string) => {
 };
 
 // Exportar instância do serviço
-export const auth = AuthService.getInstance(); 
+export const auth = AuthService.getInstance();

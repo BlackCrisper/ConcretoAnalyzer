@@ -10,7 +10,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   credentials: true,
-  maxAge: 86400 // 24 horas
+  maxAge: 86400, // 24 horas
 };
 
 // Configuração do Helmet
@@ -25,8 +25,8 @@ const helmetOptions = {
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
+      frameSrc: ["'none'"],
+    },
   },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
@@ -40,22 +40,22 @@ const helmetOptions = {
   originAgentCluster: false,
   permittedCrossDomainPolicies: false,
   referrerPolicy: false,
-  xssFilter: true
+  xssFilter: true,
 };
 
 // Middleware de CORS
 export function corsMiddleware(req: Request, res: Response, next: NextFunction) {
-  return cors(corsOptions)(req, res, (err) => {
+  return cors(corsOptions)(req, res, err => {
     if (err) {
       logger.error('Erro no CORS', {
         error: err,
         origin: req.headers.origin,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(403).json({
         error: 'Acesso não permitido',
-        status: 'error'
+        status: 'error',
       });
     }
     return next();
@@ -76,7 +76,7 @@ export function rateLimitMiddleware(req: Request, _res: Response, next: NextFunc
   logger.debug('Requisição recebida', {
     ip,
     path,
-    method
+    method,
   });
 
   next();
@@ -141,11 +141,11 @@ export function ipValidationMiddleware(req: Request, res: Response, next: NextFu
     logger.warn('IP bloqueado', {
       ip,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(403).json({
       error: 'IP bloqueado',
-      status: 'error'
+      status: 'error',
     });
   }
 
@@ -161,13 +161,13 @@ export function userAgentValidationMiddleware(req: Request, res: Response, next:
     logger.warn('User Agent bloqueado', {
       userAgent,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(403).json({
       error: 'User Agent bloqueado',
-      status: 'error'
+      status: 'error',
     });
   }
 
   return next();
-} 
+}

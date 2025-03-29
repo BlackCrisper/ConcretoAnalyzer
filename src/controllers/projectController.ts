@@ -31,8 +31,8 @@ export async function createProject(req: Request, res: Response): Promise<void> 
         name,
         description,
         userId,
-        status: 'draft'
-      }
+        status: 'draft',
+      },
     });
   } catch (error) {
     logger.error('Erro ao criar projeto:', error);
@@ -56,7 +56,7 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
       JOIN Users u ON p.user_id = u.id
     `;
 
-    let params: any[] = [];
+    const params: any[] = [];
 
     // Se não for admin, mostrar apenas projetos do usuário
     if (role !== 'admin') {
@@ -93,7 +93,7 @@ export async function getProject(req: Request, res: Response): Promise<void> {
       WHERE p.id = $1
     `;
 
-    let params = [id];
+    const params = [id];
 
     // Se não for admin, verificar se o projeto pertence ao usuário
     if (role !== 'admin') {
@@ -213,7 +213,7 @@ export async function getProjectFiles(req: Request, res: Response): Promise<void
       WHERE p.id = $1
     `;
 
-    let params = [id];
+    const params = [id];
 
     // Se não for admin, verificar se o projeto pertence ao usuário
     if (role !== 'admin') {
@@ -248,7 +248,7 @@ export async function getProjectAnalysis(req: Request, res: Response): Promise<v
       WHERE p.id = $1
     `;
 
-    let params = [id];
+    const params = [id];
 
     // Se não for admin, verificar se o projeto pertence ao usuário
     if (role !== 'admin') {
@@ -283,7 +283,7 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
       WHERE p.id = $1
     `;
 
-    let params = [id];
+    const params = [id];
 
     // Se não for admin, verificar se o projeto pertence ao usuário
     if (role !== 'admin') {
@@ -298,4 +298,4 @@ export async function getProjectReport(req: Request, res: Response): Promise<voi
     logger.error('Erro ao buscar relatórios do projeto:', error);
     res.status(500).json({ error: 'Erro ao buscar relatórios do projeto' });
   }
-} 
+}

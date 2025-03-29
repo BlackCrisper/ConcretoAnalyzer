@@ -9,23 +9,19 @@ import {
   getSharedReports,
   getReport,
   downloadReport,
-  shareReport
+  shareReport,
 } from '../controllers/reportController';
 
 const router = express.Router();
 
 // Validações
-const projectIdValidation = [
-  param('projectId').isUUID().withMessage('ID de projeto inválido')
-];
+const projectIdValidation = [param('projectId').isUUID().withMessage('ID de projeto inválido')];
 
-const reportIdValidation = [
-  param('reportId').isUUID().withMessage('ID de relatório inválido')
-];
+const reportIdValidation = [param('reportId').isUUID().withMessage('ID de relatório inválido')];
 
 const shareValidation = [
   param('userId').isUUID().withMessage('ID de usuário inválido'),
-  param('accessLevel').isIn(['view', 'edit']).withMessage('Nível de acesso inválido')
+  param('accessLevel').isIn(['view', 'edit']).withMessage('Nível de acesso inválido'),
 ];
 
 // Middleware de autenticação para todas as rotas
@@ -41,12 +37,7 @@ router.post(
   generateProjectReport as RequestHandler
 );
 
-router.get(
-  '/:projectId',
-  projectIdValidation,
-  validateRequest,
-  getSharedReports as RequestHandler
-);
+router.get('/:projectId', projectIdValidation, validateRequest, getSharedReports as RequestHandler);
 
 router.get(
   '/:projectId/:reportId',
@@ -74,4 +65,4 @@ router.post(
   shareReport as RequestHandler
 );
 
-export default router; 
+export default router;

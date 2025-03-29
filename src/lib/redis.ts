@@ -66,7 +66,7 @@ export class RedisService {
         retryStrategy: (times: number) => {
           const delay = Math.min(times * 50, 2000);
           return delay;
-        }
+        },
       });
 
       this.setupEventListeners();
@@ -82,7 +82,7 @@ export class RedisService {
         logger.info('Conectado ao Redis');
       });
 
-      this.client.on('error', (error) => {
+      this.client.on('error', error => {
         logger.error('Erro na conexão com Redis', { error });
       });
 
@@ -109,7 +109,7 @@ export class RedisService {
     } catch (error) {
       logger.error('Erro ao obter valor do Redis', {
         error,
-        key
+        key,
       });
       return null;
     }
@@ -124,12 +124,12 @@ export class RedisService {
       }
       logger.debug('Valor armazenado no Redis', {
         key,
-        ttl
+        ttl,
       });
     } catch (error) {
       logger.error('Erro ao armazenar valor no Redis', {
         error,
-        key
+        key,
       });
     }
   }
@@ -141,7 +141,7 @@ export class RedisService {
     } catch (error) {
       logger.error('Erro ao remover valores do Redis', {
         error,
-        keys
+        keys,
       });
     }
   }
@@ -156,7 +156,7 @@ export class RedisService {
     } catch (error) {
       logger.error('Erro ao verificar existência no Redis', {
         error,
-        key
+        key,
       });
       return false;
     }
@@ -168,7 +168,7 @@ export class RedisService {
     } catch (error) {
       logger.error('Erro ao incrementar valor no Redis', {
         error,
-        key
+        key,
       });
       return 0;
     }
@@ -180,14 +180,14 @@ export class RedisService {
         await this.client.expire(key, ttl);
         logger.debug('TTL definido no Redis', {
           key,
-          ttl
+          ttl,
         });
       }
     } catch (error) {
       logger.error('Erro ao definir TTL no Redis', {
         error,
         key,
-        ttl
+        ttl,
       });
     }
   }
@@ -207,7 +207,7 @@ export class RedisService {
     } catch (error) {
       logger.error('Erro ao buscar chaves no Redis', {
         error,
-        pattern
+        pattern,
       });
       return [];
     }
@@ -238,4 +238,4 @@ export class RedisService {
   }
 }
 
-export const redis = RedisService.getInstance(); 
+export const redis = RedisService.getInstance();

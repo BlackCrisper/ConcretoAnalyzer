@@ -6,7 +6,7 @@ export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
 
-  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+  constructor(message: string, statusCode = 500, isOperational = true) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
@@ -21,12 +21,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
     logger.error('Erro operacional', {
       message: err.message,
       statusCode: err.statusCode,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(err.statusCode).json({
       status: 'error',
-      message: err.message
+      message: err.message,
     });
   }
 
@@ -34,13 +34,13 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'ValidationError') {
     logger.error('Erro de validação', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(400).json({
       status: 'error',
       message: 'Erro de validação',
-      errors: err.message
+      errors: err.message,
     });
   }
 
@@ -48,12 +48,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     logger.error('Erro de autenticação', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(401).json({
       status: 'error',
-      message: 'Erro de autenticação'
+      message: 'Erro de autenticação',
     });
   }
 
@@ -61,12 +61,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'SequelizeError' || err.name === 'MongoError') {
     logger.error('Erro de banco de dados', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(500).json({
       status: 'error',
-      message: 'Erro interno do servidor'
+      message: 'Erro interno do servidor',
     });
   }
 
@@ -74,12 +74,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'MulterError') {
     logger.error('Erro no upload de arquivo', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(400).json({
       status: 'error',
-      message: 'Erro no upload de arquivo'
+      message: 'Erro no upload de arquivo',
     });
   }
 
@@ -87,12 +87,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'TooManyRequests') {
     logger.error('Muitas requisições', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(429).json({
       status: 'error',
-      message: 'Muitas requisições'
+      message: 'Muitas requisições',
     });
   }
 
@@ -100,12 +100,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'CacheError') {
     logger.error('Erro de cache', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(500).json({
       status: 'error',
-      message: 'Erro interno do servidor'
+      message: 'Erro interno do servidor',
     });
   }
 
@@ -113,12 +113,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'OCRError') {
     logger.error('Erro no processamento OCR', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(500).json({
       status: 'error',
-      message: 'Erro no processamento de imagem'
+      message: 'Erro no processamento de imagem',
     });
   }
 
@@ -126,24 +126,24 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   if (err.name === 'EmailError') {
     logger.error('Erro no envio de email', {
       message: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
 
     return res.status(500).json({
       status: 'error',
-      message: 'Erro no envio de email'
+      message: 'Erro no envio de email',
     });
   }
 
   // Erro não tratado
   logger.error('Erro não tratado', {
     message: err.message,
-    stack: err.stack
+    stack: err.stack,
   });
 
   return res.status(500).json({
     status: 'error',
-    message: 'Erro interno do servidor'
+    message: 'Erro interno do servidor',
   });
 };
 
@@ -151,12 +151,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
 export const notFoundHandler = (req: Request, res: Response) => {
   logger.warn('Rota não encontrada', {
     method: req.method,
-    url: req.url
+    url: req.url,
   });
 
   res.status(404).json({
     status: 'error',
-    message: 'Rota não encontrada'
+    message: 'Rota não encontrada',
   });
 };
 
@@ -215,4 +215,4 @@ export const validateError = (err: any): AppError => {
 
   // Erro não tratado
   return new AppError('Erro interno do servidor', 500);
-}; 
+};

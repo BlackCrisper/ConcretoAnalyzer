@@ -24,17 +24,17 @@ export class JWTService {
   public generateAccessToken(payload: any): string {
     try {
       const token = jwt.sign(payload, this.secret, {
-        expiresIn: this.accessExpiresIn
+        expiresIn: this.accessExpiresIn,
       } as jwt.SignOptions);
       logger.debug('Token de acesso gerado', {
         userId: payload.id,
-        expiresIn: this.accessExpiresIn
+        expiresIn: this.accessExpiresIn,
       });
       return token;
     } catch (error) {
       logger.error('Erro ao gerar token de acesso', {
         error,
-        payload
+        payload,
       });
       throw error;
     }
@@ -43,17 +43,17 @@ export class JWTService {
   public generateRefreshToken(payload: any): string {
     try {
       const token = jwt.sign(payload, this.secret, {
-        expiresIn: this.refreshExpiresIn
+        expiresIn: this.refreshExpiresIn,
       } as jwt.SignOptions);
       logger.debug('Token de atualização gerado', {
         userId: payload.id,
-        expiresIn: this.refreshExpiresIn
+        expiresIn: this.refreshExpiresIn,
       });
       return token;
     } catch (error) {
       logger.error('Erro ao gerar token de atualização', {
         error,
-        payload
+        payload,
       });
       throw error;
     }
@@ -63,13 +63,13 @@ export class JWTService {
     try {
       const decoded = jwt.verify(token, this.secret);
       logger.debug('Token verificado', {
-        userId: (decoded as any).id
+        userId: (decoded as any).id,
       });
       return decoded;
     } catch (error) {
       logger.error('Erro ao verificar token', {
         error,
-        token
+        token,
       });
       throw error;
     }
@@ -81,7 +81,7 @@ export class JWTService {
     } catch (error) {
       logger.error('Erro ao decodificar token', {
         error,
-        token
+        token,
       });
       throw error;
     }
@@ -99,7 +99,7 @@ export class JWTService {
     } catch (error) {
       logger.error('Erro ao verificar expiração do token', {
         error,
-        token
+        token,
       });
       return true;
     }
@@ -114,7 +114,7 @@ export class JWTService {
     } catch (error) {
       logger.error('Erro ao extrair token do header', {
         error,
-        header
+        header,
       });
       return null;
     }
@@ -127,19 +127,21 @@ export class JWTService {
       logger.debug('Tokens gerados', {
         userId: payload.id,
         accessExpiresIn: this.accessExpiresIn,
-        refreshExpiresIn: this.refreshExpiresIn
+        refreshExpiresIn: this.refreshExpiresIn,
       });
       return { accessToken, refreshToken };
     } catch (error) {
       logger.error('Erro ao gerar tokens', {
         error,
-        payload
+        payload,
       });
       throw error;
     }
   }
 
-  public async refreshTokens(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  public async refreshTokens(
+    refreshToken: string
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const decoded = this.verifyToken(refreshToken);
       const { id, ...rest } = decoded;
@@ -147,9 +149,9 @@ export class JWTService {
     } catch (error) {
       logger.error('Erro ao atualizar tokens', {
         error,
-        refreshToken
+        refreshToken,
       });
       throw error;
     }
   }
-} 
+}

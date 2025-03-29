@@ -6,4 +6,4 @@ export const rateLimiter = rateLimit({
   message: 'Muitas requisições deste IP, por favor tente novamente após 15 minutos',
   standardHeaders: true,
   legacyHeaders: false,
-}); 
+});

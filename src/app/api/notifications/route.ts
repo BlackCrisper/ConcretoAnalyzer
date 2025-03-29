@@ -17,9 +17,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      notifications
+      notifications,
     });
-
   } catch (error) {
     console.error('Notifications API error:', error);
     return NextResponse.json(
@@ -27,4 +26,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

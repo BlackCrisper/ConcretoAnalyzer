@@ -28,7 +28,12 @@ function createEndHandler(
   requestSize: number,
   additionalMetrics?: (duration: number) => void
 ) {
-  return function(this: Response, chunk: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
+  return function (
+    this: Response,
+    chunk: any,
+    encoding?: BufferEncoding | (() => void),
+    cb?: () => void
+  ) {
     const duration = Date.now() - start;
     const contentLength = this.getHeader('content-length');
     const responseSize = typeof contentLength === 'string' ? parseInt(contentLength) : 0;
@@ -43,7 +48,7 @@ function createEndHandler(
       ip: req.ip,
       userAgent: req.headers['user-agent'] || 'unknown',
       requestSize,
-      responseSize
+      responseSize,
     };
 
     // Armazenar métricas
@@ -56,7 +61,7 @@ function createEndHandler(
     logger.debug('Métricas coletadas', {
       ...metric,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
 
     // Executar métricas adicionais se fornecidas
@@ -86,14 +91,19 @@ export function monitoringMiddleware(req: Request, res: Response, next: NextFunc
 }
 
 // Middleware de monitoramento de erros
-export function errorMonitoringMiddleware(err: Error, req: Request, _res: Response, next: NextFunction) {
+export function errorMonitoringMiddleware(
+  err: Error,
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) {
   logger.error('Erro na aplicação', {
     error: err,
     path: req.path,
     method: req.method,
     ip: req.ip,
     userAgent: req.headers['user-agent'],
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 
   next(err);
@@ -107,7 +117,7 @@ export function performanceMonitoringMiddleware(req: Request, res: Response, nex
 
   // Interceptar resposta
   const originalEnd = res.end;
-  res.end = createEndHandler(originalEnd, req, start, requestSize, (duration) => {
+  res.end = createEndHandler(originalEnd, req, start, requestSize, duration => {
     const endMemory = process.memoryUsage();
 
     // Calcular uso de memória
@@ -115,7 +125,7 @@ export function performanceMonitoringMiddleware(req: Request, res: Response, nex
       heapUsed: endMemory.heapUsed - startMemory.heapUsed,
       heapTotal: endMemory.heapTotal - startMemory.heapTotal,
       external: endMemory.external - startMemory.external,
-      rss: endMemory.rss - startMemory.rss
+      rss: endMemory.rss - startMemory.rss,
     };
 
     // Log de performance
@@ -123,7 +133,7 @@ export function performanceMonitoringMiddleware(req: Request, res: Response, nex
       duration,
       memoryUsage,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
   });
 
@@ -138,7 +148,7 @@ export function resourceMonitoringMiddleware(req: Request, res: Response, next: 
 
   // Interceptar resposta
   const originalEnd = res.end;
-  res.end = createEndHandler(originalEnd, req, start, requestSize, (duration) => {
+  res.end = createEndHandler(originalEnd, req, start, requestSize, duration => {
     const endCpu = process.cpuUsage(startCpu);
 
     // Log de recursos
@@ -146,7 +156,7 @@ export function resourceMonitoringMiddleware(req: Request, res: Response, next: 
       duration,
       cpuUsage: endCpu,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
   });
 
@@ -161,7 +171,7 @@ export function securityMonitoringMiddleware(req: Request, _res: Response, next:
     'x-real-ip',
     'x-client-ip',
     'x-forwarded',
-    'x-forwarded-proto'
+    'x-forwarded-proto',
   ];
 
   const suspiciousHeaderFound = Object.keys(req.headers).some(header =>
@@ -173,22 +183,25 @@ export function securityMonitoringMiddleware(req: Request, _res: Response, next:
       headers: req.headers,
       path: req.path,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
     });
   }
 
   // Verificar payload suspeito
-  const suspiciousPayload = req.body && typeof req.body === 'object' &&
-    Object.values(req.body).some(value =>
-      typeof value === 'string' &&
-      (value.includes('<script>') || value.includes('javascript:') || value.includes('onerror='))
+  const suspiciousPayload =
+    req.body &&
+    typeof req.body === 'object' &&
+    Object.values(req.body).some(
+      value =>
+        typeof value === 'string' &&
+        (value.includes('<script>') || value.includes('javascript:') || value.includes('onerror='))
     );
 
   if (suspiciousPayload) {
     logger.warn('Payload suspeito detectado', {
       path: req.path,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
     });
   }
 
@@ -218,7 +231,7 @@ export function getStats(): {
     averageDuration: 0,
     statusCodes: {} as { [key: number]: number },
     methods: {} as { [key: string]: number },
-    paths: {} as { [key: string]: number }
+    paths: {} as { [key: string]: number },
   };
 
   if (metrics.length === 0) {
@@ -243,4 +256,4 @@ export function getStats(): {
   stats.averageDuration = totalDuration / metrics.length;
 
   return stats;
-} 
+}

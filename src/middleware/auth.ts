@@ -21,28 +21,16 @@ export interface TokenPayload {
 
 // Função para gerar token JWT
 export function generateToken(id: string, role: string): string {
-  return jwt.sign(
-    { id, role },
-    JWT_CONFIG.SECRET,
-    { expiresIn: '1d' }
-  );
+  return jwt.sign({ id, role }, JWT_CONFIG.SECRET, { expiresIn: '1d' });
 }
 
 // Função para gerar token de refresh
 export function generateRefreshToken(id: string, role: string): string {
-  return jwt.sign(
-    { id, role },
-    JWT_CONFIG.REFRESH_SECRET,
-    { expiresIn: '7d' }
-  );
+  return jwt.sign({ id, role }, JWT_CONFIG.REFRESH_SECRET, { expiresIn: '7d' });
 }
 
 // Middleware de autenticação
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -69,14 +57,14 @@ export const authorize = (roles: string[]) => {
       if (!user) {
         return res.status(401).json({
           status: 'error',
-          message: 'Não autorizado'
+          message: 'Não autorizado',
         });
       }
 
       if (!roles.includes(user.role)) {
         return res.status(403).json({
           status: 'error',
-          message: 'Acesso negado'
+          message: 'Acesso negado',
         });
       }
 
@@ -96,14 +84,14 @@ export const checkOwnership = (resourceId: string) => {
       if (!user) {
         return res.status(401).json({
           status: 'error',
-          message: 'Não autorizado'
+          message: 'Não autorizado',
         });
       }
 
       if (user.role !== 'admin' && user.id !== resourceId) {
         return res.status(403).json({
           status: 'error',
-          message: 'Acesso negado'
+          message: 'Acesso negado',
         });
       }
 
@@ -152,7 +140,7 @@ export const validateRefreshToken = async (req: AuthRequest, res: Response, next
       logger.error('Erro de autenticação', { error });
       return res.status(401).json({
         status: 'error',
-        message: 'Token de refresh inválido'
+        message: 'Token de refresh inválido',
       });
     }
 
@@ -161,17 +149,21 @@ export const validateRefreshToken = async (req: AuthRequest, res: Response, next
 };
 
 // Middleware para validar token de reset de senha
-export const validatePasswordResetToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const validatePasswordResetToken = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { token } = req.params;
 
     if (!token) {
       logger.warn('Tentativa de reset sem token', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Token de reset não fornecido'
+        error: 'Token de reset não fornecido',
       });
     }
 
@@ -180,20 +172,20 @@ export const validatePasswordResetToken = async (req: AuthRequest, res: Response
     if (isBlacklisted) {
       logger.warn('Token de reset na lista negra', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token inválido'
+        error: 'Token inválido',
       });
     }
 
     if (isTokenExpired(token)) {
       logger.warn('Token de reset expirado', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token de reset expirado'
+        error: 'Token de reset expirado',
       });
     }
 
@@ -207,7 +199,7 @@ export const validatePasswordResetToken = async (req: AuthRequest, res: Response
     if (error instanceof jwt.JsonWebTokenError) {
       logger.error('Erro de autenticação', { error });
       return res.status(401).json({
-        error: 'Token inválido'
+        error: 'Token inválido',
       });
     }
 
@@ -216,17 +208,21 @@ export const validatePasswordResetToken = async (req: AuthRequest, res: Response
 };
 
 // Middleware para validar token de verificação de email
-export const validateEmailVerificationToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const validateEmailVerificationToken = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { token } = req.params;
 
     if (!token) {
       logger.warn('Tentativa de verificação sem token', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Token de verificação não fornecido'
+        error: 'Token de verificação não fornecido',
       });
     }
 
@@ -235,20 +231,20 @@ export const validateEmailVerificationToken = async (req: AuthRequest, res: Resp
     if (isBlacklisted) {
       logger.warn('Token de verificação na lista negra', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token inválido'
+        error: 'Token inválido',
       });
     }
 
     if (isTokenExpired(token)) {
       logger.warn('Token de verificação expirado', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token de verificação expirado'
+        error: 'Token de verificação expirado',
       });
     }
 
@@ -262,7 +258,7 @@ export const validateEmailVerificationToken = async (req: AuthRequest, res: Resp
     if (error instanceof jwt.JsonWebTokenError) {
       logger.error('Erro de autenticação', { error });
       return res.status(401).json({
-        error: 'Token inválido'
+        error: 'Token inválido',
       });
     }
 
@@ -278,10 +274,10 @@ export const validateInviteToken = async (req: AuthRequest, res: Response, next:
     if (!token) {
       logger.warn('Tentativa de convite sem token', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Token de convite não fornecido'
+        error: 'Token de convite não fornecido',
       });
     }
 
@@ -290,20 +286,20 @@ export const validateInviteToken = async (req: AuthRequest, res: Response, next:
     if (isBlacklisted) {
       logger.warn('Token de convite na lista negra', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token inválido'
+        error: 'Token inválido',
       });
     }
 
     if (isTokenExpired(token)) {
       logger.warn('Token de convite expirado', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(401).json({
-        error: 'Token de convite expirado'
+        error: 'Token de convite expirado',
       });
     }
 
@@ -312,17 +308,17 @@ export const validateInviteToken = async (req: AuthRequest, res: Response, next:
     logger.debug('Token de convite válido', {
       inviteId: decoded.id,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return next();
   } catch (error) {
     logger.error('Erro na validação do token de convite', {
       error,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(401).json({
-      error: 'Token de convite inválido'
+      error: 'Token de convite inválido',
     });
   }
-}; 
+};

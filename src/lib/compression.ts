@@ -39,11 +39,11 @@ const compressionOptions = {
       'application/x-font-otf',
       'application/x-font-woff',
       'application/x-font-woff2',
-      'application/vnd.ms-fontobject'
+      'application/vnd.ms-fontobject',
     ];
 
     return compressibleTypes.some(type => contentType.includes(type));
-  }
+  },
 };
 
 // Middleware de compressão
@@ -60,7 +60,7 @@ export const compressionLogger = (req: any, res: any, next: any) => {
         url: req.url,
         duration,
         originalSize: res.getHeader('content-length'),
-        compressedSize: res.getHeader('content-length')
+        compressedSize: res.getHeader('content-length'),
       });
     }
   });
@@ -74,7 +74,7 @@ export const typeCompressionMiddleware = (types: string[]) => {
     filter: (_: any, res: any) => {
       const contentType = res.getHeader('Content-Type');
       return types.some(type => contentType?.includes(type));
-    }
+    },
   });
 };
 
@@ -82,7 +82,7 @@ export const typeCompressionMiddleware = (types: string[]) => {
 export const sizeCompressionMiddleware = (minSize: number) => {
   return compression({
     ...compressionOptions,
-    threshold: minSize
+    threshold: minSize,
   });
 };
 
@@ -92,7 +92,7 @@ export const routeCompressionMiddleware = (routes: string[]) => {
     ...compressionOptions,
     filter: (req: any, _: any) => {
       return routes.some(route => req.path.startsWith(route));
-    }
+    },
   });
 };
 
@@ -102,7 +102,7 @@ export const methodCompressionMiddleware = (methods: string[]) => {
     ...compressionOptions,
     filter: (req: any, _: any) => {
       return methods.includes(req.method);
-    }
+    },
   });
 };
 
@@ -111,7 +111,7 @@ export const errorCompressionMiddleware = compression({
   ...compressionOptions,
   filter: (_: any, res: any) => {
     return res.statusCode >= 400;
-  }
+  },
 });
 
 // Middleware para compressão de sucesso
@@ -119,7 +119,7 @@ export const successCompressionMiddleware = compression({
   ...compressionOptions,
   filter: (_: any, res: any) => {
     return res.statusCode < 400;
-  }
+  },
 });
 
 // Middleware para compressão de JSON
@@ -132,7 +132,10 @@ export const htmlCompressionMiddleware = typeCompressionMiddleware(['text/html']
 export const cssCompressionMiddleware = typeCompressionMiddleware(['text/css']);
 
 // Middleware para compressão de JavaScript
-export const jsCompressionMiddleware = typeCompressionMiddleware(['application/javascript', 'text/javascript']);
+export const jsCompressionMiddleware = typeCompressionMiddleware([
+  'application/javascript',
+  'text/javascript',
+]);
 
 // Configurar compressão
 export const defaultCompression = compression(compressionOptions);
@@ -143,7 +146,7 @@ export const jsonCompression = compression({
   level: 6,
   filter: (_: any, res: any) => {
     return res.getHeader('Content-Type')?.includes('application/json') || false;
-  }
+  },
 });
 
 // Configurar compressão para XML
@@ -152,7 +155,7 @@ export const xmlCompression = compression({
   level: 6,
   filter: (_: any, res: any) => {
     return res.getHeader('Content-Type')?.includes('application/xml') || false;
-  }
+  },
 });
 
 // Configurar compressão para HTML
@@ -161,7 +164,7 @@ export const htmlCompression = compression({
   level: 6,
   filter: (_: any, __: any) => {
     return true;
-  }
+  },
 });
 
 // Configurar compressão para CSS
@@ -170,5 +173,5 @@ export const cssCompression = compression({
   level: 6,
   filter: (_: any, __: any) => {
     return true;
-  }
-}); 
+  },
+});

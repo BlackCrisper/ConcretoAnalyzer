@@ -24,7 +24,7 @@ export const errorHandler = (
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: err.status,
-      message: err.message
+      message: err.message,
     });
   }
 
@@ -32,7 +32,7 @@ export const errorHandler = (
   if (err.name === 'RequestError' || err.name === 'TransactionError') {
     return res.status(400).json({
       status: 'error',
-      message: 'Erro na operação com o banco de dados'
+      message: 'Erro na operação com o banco de dados',
     });
   }
 
@@ -40,14 +40,14 @@ export const errorHandler = (
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       status: 'error',
-      message: 'Token inválido'
+      message: 'Token inválido',
     });
   }
 
   if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
       status: 'error',
-      message: 'Token expirado'
+      message: 'Token expirado',
     });
   }
 
@@ -55,7 +55,7 @@ export const errorHandler = (
   if (err.name === 'MulterError') {
     return res.status(400).json({
       status: 'error',
-      message: 'Erro no upload do arquivo'
+      message: 'Erro no upload do arquivo',
     });
   }
 
@@ -63,7 +63,7 @@ export const errorHandler = (
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       status: 'error',
-      message: err.message
+      message: err.message,
     });
   }
 
@@ -72,7 +72,7 @@ export const errorHandler = (
 
   return res.status(500).json({
     status: 'error',
-    message: 'Erro interno do servidor'
+    message: 'Erro interno do servidor',
   });
 };
 
@@ -94,4 +94,4 @@ export function catchAsync(fn: Function) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
-} 
+}

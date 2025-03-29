@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getInvitationById, revokeInvitation, resendInvitation } from '@/services/invitationService';
+import {
+  getInvitationById,
+  revokeInvitation,
+  resendInvitation,
+} from '@/services/invitationService';
 
 // Get invitation by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const invitationId = params.id;
     const invitation = await getInvitationById(invitationId);
@@ -19,23 +20,17 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      invitation
+      invitation,
     });
   } catch (error) {
     console.error(`Error getting invitation ${params.id}:`, error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao obter convite' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao obter convite' }, { status: 500 });
   }
 }
 
 // Revoke invitation
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const invitationId = params.id;
 
@@ -60,7 +55,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Convite revogado com sucesso'
+      message: 'Convite revogado com sucesso',
     });
   } catch (error) {
     console.error(`Error revoking invitation ${params.id}:`, error);

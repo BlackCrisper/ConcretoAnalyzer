@@ -12,15 +12,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      branches
+      branches,
     });
   } catch (error) {
     console.error('Error getting branches:', error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao obter filiais' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao obter filiais' }, { status: 500 });
   }
 }
 
@@ -35,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Nome da filial e ID da empresa são obrigatórios'
+          message: 'Nome da filial e ID da empresa são obrigatórios',
         },
         { status: 400 }
       );
@@ -44,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Create branch in the database
     const result = await createBranch({
       name,
-      companyId
+      companyId,
     });
 
     if (!result.success) {
@@ -57,14 +54,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Filial criada com sucesso',
-      branchId: result.branchId
+      branchId: result.branchId,
     });
   } catch (error) {
     console.error('Error creating branch:', error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao criar filial' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao criar filial' }, { status: 500 });
   }
 }

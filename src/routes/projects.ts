@@ -11,7 +11,7 @@ import {
   deleteProject,
   getProjectFiles,
   getProjectAnalysis,
-  getProjectReport
+  getProjectReport,
 } from '../controllers/projectController';
 
 const router = Router();
@@ -20,15 +20,10 @@ const router = Router();
 const projectValidation = [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
   body('description').optional().trim(),
-  body('status')
-    .optional()
-    .isIn(['active', 'archived', 'deleted'])
-    .withMessage('Status inválido')
+  body('status').optional().isIn(['active', 'archived', 'deleted']).withMessage('Status inválido'),
 ];
 
-const projectIdValidation = [
-  param('id').isUUID().withMessage('ID de projeto inválido')
-];
+const projectIdValidation = [param('id').isUUID().withMessage('ID de projeto inválido')];
 
 // Middleware de autenticação para todas as rotas
 router.use(authMiddleware as express.RequestHandler);
@@ -44,12 +39,7 @@ router.post(
 
 router.get('/', getProjects);
 
-router.get(
-  '/:id',
-  projectIdValidation,
-  validateRequest,
-  getProject
-);
+router.get('/:id', projectIdValidation, validateRequest, getProject);
 
 router.put(
   '/:id',
@@ -60,17 +50,11 @@ router.put(
   updateProject
 );
 
-router.delete(
-  '/:id',
-  checkRole(['admin']),
-  projectIdValidation,
-  validateRequest,
-  deleteProject
-);
+router.delete('/:id', checkRole(['admin']), projectIdValidation, validateRequest, deleteProject);
 
 // Rotas relacionadas
 router.get('/:id/files', getProjectFiles);
 router.get('/:id/analysis', getProjectAnalysis);
 router.get('/:id/report', getProjectReport);
 
-export default router; 
+export default router;

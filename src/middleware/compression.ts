@@ -27,24 +27,29 @@ const compressionOptions = {
     }
 
     return true;
-  }
+  },
 };
 
 // Middleware de compressão
 export function compressionMiddleware(req: Request, res: Response, next: NextFunction) {
-  compression(compressionOptions)(req, res, (err) => {
+  compression(compressionOptions)(req, res, err => {
     if (err) {
       logger.error('Erro na compressão', {
         error: err,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return next();
     }
 
     // Log de compressão
     const originalEnd = res.end;
-    const newEnd = function(this: Response, chunk: any, encoding?: BufferEncoding | (() => void), cb?: () => void) {
+    const newEnd = function (
+      this: Response,
+      chunk: any,
+      encoding?: BufferEncoding | (() => void),
+      cb?: () => void
+    ) {
       const contentLength = res.getHeader('content-length');
       const contentEncoding = res.getHeader('content-encoding');
 
@@ -53,7 +58,7 @@ export function compressionMiddleware(req: Request, res: Response, next: NextFun
           path: req.path,
           method: req.method,
           originalSize: contentLength,
-          encoding: contentEncoding
+          encoding: contentEncoding,
         });
       }
 
@@ -80,7 +85,7 @@ export function typeCompressionMiddleware(types: string[]) {
         return types.some(type => contentType.includes(type));
       }
       return false;
-    }
+    },
   });
 }
 
@@ -95,7 +100,7 @@ export function sizeCompressionMiddleware(minSize: number, maxSize: number) {
         return size >= minSize && size <= maxSize;
       }
       return false;
-    }
+    },
   });
 }
 
@@ -105,7 +110,7 @@ export function routeCompressionMiddleware(routes: string[]) {
     ...compressionOptions,
     filter: (req: Request, _res: Response) => {
       return routes.some(route => req.path.startsWith(route));
-    }
+    },
   });
 }
 
@@ -115,7 +120,7 @@ export function methodCompressionMiddleware(methods: string[]) {
     ...compressionOptions,
     filter: (req: Request, _res: Response) => {
       return methods.includes(req.method);
-    }
+    },
   });
 }
 
@@ -125,7 +130,7 @@ export function errorCompressionMiddleware(req: Request, res: Response, next: Ne
     ...compressionOptions,
     filter: (_req: Request, res: Response) => {
       return res.statusCode >= 400;
-    }
+    },
   })(req, res, next);
 }
 
@@ -135,7 +140,7 @@ export function successCompressionMiddleware(req: Request, res: Response, next: 
     ...compressionOptions,
     filter: (_req: Request, res: Response) => {
       return res.statusCode < 400;
-    }
+    },
   })(req, res, next);
 }
 
@@ -146,7 +151,7 @@ export function jsonCompressionMiddleware(req: Request, res: Response, next: Nex
     filter: (_req: Request, res: Response) => {
       const contentType = res.getHeader('content-type');
       return typeof contentType === 'string' && contentType.includes('application/json');
-    }
+    },
   })(req, res, next);
 }
 
@@ -157,7 +162,7 @@ export function htmlCompressionMiddleware(req: Request, res: Response, next: Nex
     filter: (_req: Request, res: Response) => {
       const contentType = res.getHeader('content-type');
       return typeof contentType === 'string' && contentType.includes('text/html');
-    }
+    },
   })(req, res, next);
 }
 
@@ -168,7 +173,7 @@ export function cssCompressionMiddleware(req: Request, res: Response, next: Next
     filter: (_req: Request, res: Response) => {
       const contentType = res.getHeader('content-type');
       return typeof contentType === 'string' && contentType.includes('text/css');
-    }
+    },
   })(req, res, next);
 }
 
@@ -179,6 +184,6 @@ export function jsCompressionMiddleware(req: Request, res: Response, next: NextF
     filter: (_req: Request, res: Response) => {
       const contentType = res.getHeader('content-type');
       return typeof contentType === 'string' && contentType.includes('application/javascript');
-    }
+    },
   })(req, res, next);
-} 
+}

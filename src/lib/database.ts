@@ -12,7 +12,7 @@ const pool = new Pool({
   ssl: DB_CONFIG.DB_SSL ? { rejectUnauthorized: false } : false,
   max: DB_CONFIG.DB_MAX_CONNECTIONS,
   idleTimeoutMillis: DB_CONFIG.DB_IDLE_TIMEOUT,
-  connectionTimeoutMillis: DB_CONFIG.DB_CONNECTION_TIMEOUT
+  connectionTimeoutMillis: DB_CONFIG.DB_CONNECTION_TIMEOUT,
 });
 
 // Eventos do pool
@@ -20,7 +20,7 @@ pool.on('connect', () => {
   logger.info('Nova conexão com o banco de dados estabelecida');
 });
 
-pool.on('error', (err) => {
+pool.on('error', err => {
   logger.error('Erro no pool de conexões do banco de dados', { error: err });
 });
 
@@ -114,4 +114,4 @@ export async function closePool() {
   }
 }
 
-export default pool; 
+export default pool;

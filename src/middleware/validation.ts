@@ -14,27 +14,27 @@ export function validate(validations: ValidationChain[]) {
         logger.warn('Erro de validação', {
           errors: errors.array(),
           path: req.path,
-          method: req.method
+          method: req.method,
         });
         return res.status(400).json({
           error: 'Dados inválidos',
-          details: errors.array()
+          details: errors.array(),
         });
       }
 
       logger.debug('Validação bem sucedida', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return next();
     } catch (error) {
       logger.error('Erro na validação', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(500).json({
-        error: 'Erro interno do servidor'
+        error: 'Erro interno do servidor',
       });
     }
   };
@@ -48,17 +48,17 @@ export function sanitize(sanitizations: ValidationChain[]) {
 
       logger.debug('Sanitização concluída', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return next();
     } catch (error) {
       logger.error('Erro na sanitização', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(500).json({
-        error: 'Erro interno do servidor'
+        error: 'Erro interno do servidor',
       });
     }
   };
@@ -69,10 +69,10 @@ export function validateFile(req: Request, res: Response, next: NextFunction) {
     if (!req.file) {
       logger.warn('Arquivo não fornecido', {
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Arquivo não fornecido'
+        error: 'Arquivo não fornecido',
       });
     }
 
@@ -82,10 +82,10 @@ export function validateFile(req: Request, res: Response, next: NextFunction) {
       logger.warn('Tipo de arquivo não permitido', {
         mimetype: req.file.mimetype,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Tipo de arquivo não permitido'
+        error: 'Tipo de arquivo não permitido',
       });
     }
 
@@ -96,10 +96,10 @@ export function validateFile(req: Request, res: Response, next: NextFunction) {
         size: req.file.size,
         maxSize,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Arquivo muito grande'
+        error: 'Arquivo muito grande',
       });
     }
 
@@ -108,10 +108,10 @@ export function validateFile(req: Request, res: Response, next: NextFunction) {
     logger.error('Erro na validação do arquivo', {
       error,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(500).json({
-      error: 'Erro interno do servidor'
+      error: 'Erro interno do servidor',
     });
   }
 }
@@ -125,10 +125,10 @@ export function validatePagination(req: Request, res: Response, next: NextFuncti
       logger.warn('Página inválida', {
         page,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Página inválida'
+        error: 'Página inválida',
       });
     }
 
@@ -136,10 +136,10 @@ export function validatePagination(req: Request, res: Response, next: NextFuncti
       logger.warn('Limite inválido', {
         limit,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Limite inválido'
+        error: 'Limite inválido',
       });
     }
 
@@ -152,10 +152,10 @@ export function validatePagination(req: Request, res: Response, next: NextFuncti
     logger.error('Erro na validação da paginação', {
       error,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(500).json({
-      error: 'Erro interno do servidor'
+      error: 'Erro interno do servidor',
     });
   }
 }
@@ -170,10 +170,10 @@ export function validateSearch(req: Request, res: Response, next: NextFunction) 
         query,
         minLength,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       return res.status(400).json({
-        error: 'Termo de busca inválido'
+        error: 'Termo de busca inválido',
       });
     }
 
@@ -185,10 +185,10 @@ export function validateSearch(req: Request, res: Response, next: NextFunction) 
     logger.error('Erro na validação da busca', {
       error,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     return res.status(500).json({
-      error: 'Erro interno do servidor'
+      error: 'Erro interno do servidor',
     });
   }
-} 
+}

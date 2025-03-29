@@ -6,11 +6,8 @@ export const rateLimiter = rateLimit({
   max: 100, // limite de 100 requisições por IP
   message: 'Muitas requisições deste IP, tente novamente mais tarde.',
   handler: (_, __, ___, options) => {
-    return NextResponse.json(
-      { success: false, message: options.message },
-      { status: 429 }
-    );
+    return NextResponse.json({ success: false, message: options.message }, { status: 429 });
   },
   legacyHeaders: false,
   standardHeaders: true,
-}); 
+});

@@ -10,12 +10,12 @@ export const globalLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Muitas requisições deste IP, tente novamente mais tarde.'
+      error: 'Muitas requisições deste IP, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para autenticação
@@ -26,12 +26,12 @@ export const authLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Auth rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Muitas tentativas de login, tente novamente mais tarde.'
+      error: 'Muitas tentativas de login, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para upload de arquivos
@@ -42,12 +42,12 @@ export const uploadLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Upload rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de uploads excedido, tente novamente mais tarde.'
+      error: 'Limite de uploads excedido, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para análise estrutural
@@ -58,12 +58,12 @@ export const analysisLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Analysis rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de análises excedido, tente novamente mais tarde.'
+      error: 'Limite de análises excedido, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para geração de relatórios
@@ -74,12 +74,12 @@ export const reportLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Report generation rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de geração de relatórios excedido, tente novamente mais tarde.'
+      error: 'Limite de geração de relatórios excedido, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para API
@@ -90,12 +90,12 @@ export const apiLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('API rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de requisições à API excedido, tente novamente mais tarde.'
+      error: 'Limite de requisições à API excedido, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para download
@@ -106,12 +106,12 @@ export const downloadLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Download rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de downloads excedido, tente novamente mais tarde.'
+      error: 'Limite de downloads excedido, tente novamente mais tarde.',
     });
-  }
+  },
 });
 
 // Configurar rate limiter para compartilhamento
@@ -122,10 +122,10 @@ export const shareLimiter = rateLimit({
   handler: (req, res) => {
     logger.warn('Share rate limit exceeded', {
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
     res.status(429).json({
-      error: 'Limite de compartilhamentos excedido, tente novamente mais tarde.'
+      error: 'Limite de compartilhamentos excedido, tente novamente mais tarde.',
     });
-  }
-}); 
+  },
+});

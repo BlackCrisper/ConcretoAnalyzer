@@ -35,12 +35,12 @@ class EmailService {
         secure: false,
         auth: {
           user: EMAIL_CONFIG.SMTP_USER,
-          pass: EMAIL_CONFIG.SMTP_PASS
-        }
+          pass: EMAIL_CONFIG.SMTP_PASS,
+        },
       });
 
       // Verificar conexão
-      this.transporter.verify((error) => {
+      this.transporter.verify(error => {
         if (error) {
           logger.warn('Erro na configuração do email, usando implementação mock', { error });
           this.transporter = new MockEmailTransporter();
@@ -77,7 +77,7 @@ class EmailService {
         to: Array.isArray(to) ? to.join(',') : to,
         subject,
         html,
-        attachments
+        attachments,
       });
       logger.info('Email enviado com sucesso', { to, subject });
     } catch (error) {
@@ -198,4 +198,4 @@ class EmailService {
   }
 }
 
-export const emailService = EmailService.getInstance(); 
+export const emailService = EmailService.getInstance();

@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
   filename: (_, file, cb) => {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // Configurar filtro de arquivos
@@ -34,8 +34,8 @@ export const upload = multer({
   fileFilter,
   limits: {
     fileSize: UPLOAD_CONFIG.MAX_FILE_SIZE,
-    files: 1
-  }
+    files: 1,
+  },
 });
 
 // Middleware para tratamento de erros do upload
@@ -45,19 +45,21 @@ export const handleUploadError = (err: any, _: any, res: any) => {
       logger.error('Arquivo muito grande', {
         error: err,
         fileSize: res.file?.size,
-        maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE
+        maxSize: UPLOAD_CONFIG.MAX_FILE_SIZE,
       });
       return res.status(400).json({
-        error: `Arquivo muito grande. Tamanho máximo: ${UPLOAD_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`
+        error: `Arquivo muito grande. Tamanho máximo: ${
+          UPLOAD_CONFIG.MAX_FILE_SIZE / 1024 / 1024
+        }MB`,
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
       logger.error('Muitos arquivos', {
         error: err,
-        fileCount: res.files?.length
+        fileCount: res.files?.length,
       });
       return res.status(400).json({
-        error: 'Apenas um arquivo pode ser enviado por vez'
+        error: 'Apenas um arquivo pode ser enviado por vez',
       });
     }
   }
@@ -65,19 +67,19 @@ export const handleUploadError = (err: any, _: any, res: any) => {
   if (err.message.includes('Tipo de arquivo não permitido')) {
     logger.error('Tipo de arquivo inválido', {
       error: err,
-      fileType: res.file?.mimetype
+      fileType: res.file?.mimetype,
     });
     return res.status(400).json({
-      error: err.message
+      error: err.message,
     });
   }
 
   logger.error('Erro no upload', {
     error: err,
-    file: res.file
+    file: res.file,
   });
   return res.status(500).json({
-    error: 'Erro ao fazer upload do arquivo'
+    error: 'Erro ao fazer upload do arquivo',
   });
 };
 
@@ -87,7 +89,9 @@ export function validateFile(file: Express.Multer.File) {
 
   // Verificar tamanho
   if (file.size > UPLOAD_CONFIG.MAX_FILE_SIZE) {
-    errors.push(`Arquivo muito grande. Tamanho máximo: ${UPLOAD_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`);
+    errors.push(
+      `Arquivo muito grande. Tamanho máximo: ${UPLOAD_CONFIG.MAX_FILE_SIZE / 1024 / 1024}MB`
+    );
   }
 
   // Verificar tipo
@@ -97,9 +101,7 @@ export function validateFile(file: Express.Multer.File) {
 
   // Verificar extensão
   const ext = path.extname(file.originalname).toLowerCase();
-  const allowedExts = UPLOAD_CONFIG.ALLOWED_FILE_TYPES.map(type => 
-    type.split('/')[1]
-  );
+  const allowedExts = UPLOAD_CONFIG.ALLOWED_FILE_TYPES.map(type => type.split('/')[1]);
   if (!allowedExts.includes(ext.slice(1))) {
     errors.push(`Extensão não permitida: ${ext}`);
   }
@@ -152,6 +154,6 @@ export function getFileInfo(filepath: string) {
     createdAt: stats.birthtime,
     modifiedAt: stats.mtime,
     isDirectory: stats.isDirectory(),
-    isFile: stats.isFile()
+    isFile: stats.isFile(),
   };
-} 
+}

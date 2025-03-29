@@ -26,9 +26,13 @@ export const uploadFile = async (req: Request, res: Response) => {
     }
 
     // Determinar o tipo do arquivo
-    const fileType = file.mimetype.includes('pdf') ? 'pdf' as FileType :
-                     file.mimetype.includes('image') ? 'image' as FileType :
-                     file.mimetype.includes('dwg') ? 'dwg' as FileType : null;
+    const fileType = file.mimetype.includes('pdf')
+      ? ('pdf' as FileType)
+      : file.mimetype.includes('image')
+      ? ('image' as FileType)
+      : file.mimetype.includes('dwg')
+      ? ('dwg' as FileType)
+      : null;
 
     if (!fileType) {
       return res.status(400).json({ error: 'Tipo de arquivo não suportado' });
@@ -55,7 +59,7 @@ export const uploadFile = async (req: Request, res: Response) => {
       size: file.size,
       status: 'pending',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     // Processar arquivo em background
@@ -65,7 +69,7 @@ export const uploadFile = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       message: 'Arquivo enviado com sucesso',
-      fileId
+      fileId,
     });
   } catch (error) {
     logger.error('Erro ao fazer upload do arquivo:', error);
@@ -240,7 +244,7 @@ export async function getFileStatus(req: Request, res: Response): Promise<void> 
     res.json({
       status: file[0].status,
       errorMessage: file[0].error_message,
-      extractedData: file[0].extracted_data
+      extractedData: file[0].extracted_data,
     });
   } catch (error) {
     logger.error('Erro ao buscar status do arquivo:', error);
@@ -285,4 +289,4 @@ export async function getFiles(req: Request, res: Response): Promise<void> {
     logger.error('Erro ao buscar arquivos:', error);
     res.status(500).json({ error: 'Erro ao buscar arquivos' });
   }
-} 
+}

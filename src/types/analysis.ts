@@ -6,4 +6,4 @@ export interface AnalysisResult {
   error?: string;
   startedAt?: Date;
   completedAt?: Date;
-} 
+}

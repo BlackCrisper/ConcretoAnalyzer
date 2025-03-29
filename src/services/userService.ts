@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { executeQuery } from '@/lib/db';
 import { User, UserRole } from '@/contexts/auth-context';
@@ -47,17 +47,20 @@ export async function authenticateUser(email: string, password: string): Promise
     const hashedPassword = hashPassword(password);
 
     // Query the database for the user
-    const users = await executeQuery<DBUser>(`
+    const users = await executeQuery<DBUser>(
+      `
       SELECT u.id, u.name, u.email, u.role, u.company_id, u.branch_id,
              c.name as company_name, b.name as branch_name, u.active
       FROM Users u
       LEFT JOIN Companies c ON u.company_id = c.id
       LEFT JOIN Branches b ON u.branch_id = b.id
       WHERE u.email = @email AND u.password_hash = @passwordHash AND u.active = 1
-    `, {
-      email,
-      passwordHash: hashedPassword
-    });
+    `,
+      {
+        email,
+        passwordHash: hashedPassword,
+      }
+    );
 
     if (users.length === 0) {
       return { success: false, message: 'Credenciais inválidas' };
@@ -84,7 +87,6 @@ export async function authenticateUser(email: string, password: string): Promise
     };
 
     return { success: true, user };
-
   } catch (error) {
     console.error('Authentication error:', error);
     return { success: false, message: 'Erro ao autenticar usuário' };
@@ -94,12 +96,15 @@ export async function authenticateUser(email: string, password: string): Promise
 // Get user permissions from the database
 async function getUserPermissions(userId: string): Promise<string[]> {
   try {
-    const permissions = await executeQuery<Permission>(`
+    const permissions = await executeQuery<Permission>(
+      `
       SELECT p.permission_code
       FROM UserPermissions up
       JOIN Permissions p ON up.permission_id = p.id
       WHERE up.user_id = @userId
-    `, { userId });
+    `,
+      { userId }
+    );
 
     return permissions.map(p => p.permission_code);
   } catch (error) {
@@ -151,47 +156,57 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 // Create a new user
-export async function createUser(userData: Omit<User, 'id'> & { password: string }): Promise<{ success: boolean, userId?: string, message?: string }> {
+export async function createUser(
+  userData: Omit<User, 'id'> & { password: string }
+): Promise<{ success: boolean; userId?: string; message?: string }> {
   try {
     const hashedPassword = hashPassword(userData.password);
 
     // Insert the user into the database
-    const result = await executeQuery<IdResult>(`
+    const result = await executeQuery<IdResult>(
+      `
       INSERT INTO Users (name, email, password_hash, role, company_id, branch_id, active)
       VALUES (@name, @email, @passwordHash, @role, @companyId, @branchId, 1);
       SELECT SCOPE_IDENTITY() AS id;
-    `, {
-      name: userData.name,
-      email: userData.email,
-      passwordHash: hashedPassword,
-      role: userData.role,
-      companyId: userData.companyId,
-      branchId: userData.branchId || null
-    });
+    `,
+      {
+        name: userData.name,
+        email: userData.email,
+        passwordHash: hashedPassword,
+        role: userData.role,
+        companyId: userData.companyId,
+        branchId: userData.branchId || null,
+      }
+    );
 
     const userId = result[0]?.id;
 
     // Add user permissions
     if (userId && userData.permissions.length > 0) {
       // Get permission IDs from permission codes
-      const permissionIds = await executeQuery<PermissionId>(`
+      const permissionIds = await executeQuery<PermissionId>(
+        `
         SELECT id FROM Permissions WHERE permission_code IN (@permissionCodes)
-      `, { permissionCodes: userData.permissions });
+      `,
+        { permissionCodes: userData.permissions }
+      );
 
       // Insert user permissions
       for (const permId of permissionIds) {
-        await executeQuery(`
+        await executeQuery(
+          `
           INSERT INTO UserPermissions (user_id, permission_id)
           VALUES (@userId, @permissionId)
-        `, {
-          userId,
-          permissionId: permId.id
-        });
+        `,
+          {
+            userId,
+            permissionId: permId.id,
+          }
+        );
       }
     }
 
     return { success: true, userId };
-
   } catch (error) {
     console.error('Error creating user:', error);
     return { success: false, message: 'Erro ao criar usuário' };
@@ -199,7 +214,10 @@ export async function createUser(userData: Omit<User, 'id'> & { password: string
 }
 
 // Update user
-export async function updateUser(userId: string, userData: Partial<User> & { password?: string }): Promise<{ success: boolean, message?: string }> {
+export async function updateUser(
+  userId: string,
+  userData: Partial<User> & { password?: string }
+): Promise<{ success: boolean; message?: string }> {
   try {
     let query = 'UPDATE Users SET ';
     const params: Record<string, any> = { userId };
@@ -249,19 +267,25 @@ export async function updateUser(userId: string, userData: Partial<User> & { pas
       await executeQuery('DELETE FROM UserPermissions WHERE user_id = @userId', { userId });
 
       // Get permission IDs from permission codes
-      const permissionIds = await executeQuery<PermissionId>(`
+      const permissionIds = await executeQuery<PermissionId>(
+        `
         SELECT id FROM Permissions WHERE permission_code IN (@permissionCodes)
-      `, { permissionCodes: userData.permissions });
+      `,
+        { permissionCodes: userData.permissions }
+      );
 
       // Insert new permissions
       for (const permId of permissionIds) {
-        await executeQuery(`
+        await executeQuery(
+          `
           INSERT INTO UserPermissions (user_id, permission_id)
           VALUES (@userId, @permissionId)
-        `, {
-          userId,
-          permissionId: permId.id
-        });
+        `,
+          {
+            userId,
+            permissionId: permId.id,
+          }
+        );
       }
     }
 
@@ -275,11 +299,14 @@ export async function updateUser(userId: string, userData: Partial<User> & { pas
 // Update user's last login timestamp
 export async function updateUserLastLogin(userId: string): Promise<boolean> {
   try {
-    await executeQuery(`
+    await executeQuery(
+      `
       UPDATE Users
       SET last_login = GETDATE()
       WHERE id = @userId
-    `, { userId });
+    `,
+      { userId }
+    );
 
     return true;
   } catch (error) {
@@ -291,14 +318,17 @@ export async function updateUserLastLogin(userId: string): Promise<boolean> {
 // Get user by ID
 export async function getUserById(userId: string): Promise<User | null> {
   try {
-    const users = await executeQuery<DBUser>(`
+    const users = await executeQuery<DBUser>(
+      `
       SELECT u.id, u.name, u.email, u.role, u.company_id, u.branch_id,
              c.name as company_name, b.name as branch_name, u.active
       FROM Users u
       LEFT JOIN Companies c ON u.company_id = c.id
       LEFT JOIN Branches b ON u.branch_id = b.id
       WHERE u.id = @userId AND u.active = 1
-    `, { userId });
+    `,
+      { userId }
+    );
 
     if (users.length === 0) {
       return null;
@@ -324,23 +354,29 @@ export async function getUserById(userId: string): Promise<User | null> {
 }
 
 // Delete user (soft delete)
-export async function deleteUser(userId: string): Promise<{ success: boolean, message?: string }> {
+export async function deleteUser(userId: string): Promise<{ success: boolean; message?: string }> {
   try {
     // Check if user exists
-    const userExists = await executeQuery<CountResult>(`
+    const userExists = await executeQuery<CountResult>(
+      `
       SELECT COUNT(*) as count FROM Users WHERE id = @userId AND active = 1
-    `, { userId });
+    `,
+      { userId }
+    );
 
     if (userExists[0]?.count === 0) {
       return { success: false, message: 'Usuário não encontrado' };
     }
 
     // Soft delete the user
-    await executeQuery(`
+    await executeQuery(
+      `
       UPDATE Users
       SET active = 0
       WHERE id = @userId
-    `, { userId });
+    `,
+      { userId }
+    );
 
     return { success: true };
   } catch (error) {

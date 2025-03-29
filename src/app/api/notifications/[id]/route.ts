@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { deleteNotification } from '../../../../services/notificationService';
 
-export async function DELETE(
-  { params }: { params: { id: string } }
-) {
+export async function DELETE({ params }: { params: { id: string } }) {
   try {
     const notificationId = params.id;
 
@@ -24,7 +22,6 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('Delete notification API error:', error);
     return NextResponse.json(
@@ -32,4 +29,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}

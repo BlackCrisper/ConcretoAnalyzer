@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { Pool, PoolClient } from 'pg';
 import { DB_CONFIG } from '../config/env';
@@ -18,7 +18,7 @@ export class DatabaseService {
       user: DB_CONFIG.DB_USER,
       password: DB_CONFIG.DB_PASSWORD,
       ssl: DB_CONFIG.DB_SSL ? { rejectUnauthorized: false } : false,
-      max: DB_CONFIG.DB_MAX_CONNECTIONS
+      max: DB_CONFIG.DB_MAX_CONNECTIONS,
     });
 
     this.setupEventListeners();
@@ -29,7 +29,7 @@ export class DatabaseService {
       logger.info('Conectado ao banco de dados');
     });
 
-    this.pool.on('error', (error) => {
+    this.pool.on('error', error => {
       logger.error('Erro na conexão com banco de dados', { error });
     });
 
@@ -75,14 +75,14 @@ export class DatabaseService {
       logger.debug('Consulta executada', {
         text,
         params,
-        rowCount: result.rowCount
+        rowCount: result.rowCount,
       });
       return result.rows;
     } catch (error) {
       logger.error('Erro ao executar consulta', {
         error,
         text,
-        params
+        params,
       });
       throw error;
     }
@@ -94,14 +94,14 @@ export class DatabaseService {
       logger.debug('Consulta única executada', {
         text,
         params,
-        rowCount: result.rowCount
+        rowCount: result.rowCount,
       });
       return result.rows[0] || null;
     } catch (error) {
       logger.error('Erro ao executar consulta única', {
         error,
         text,
-        params
+        params,
       });
       throw error;
     }
@@ -129,13 +129,13 @@ export class DatabaseService {
       await this.pool.query(text, params);
       logger.debug('Comando executado', {
         text,
-        params
+        params,
       });
     } catch (error) {
       logger.error('Erro ao executar comando', {
         error,
         text,
-        params
+        params,
       });
       throw error;
     }
@@ -172,9 +172,11 @@ export async function executeQuery<T>(query: string, params?: Record<string, any
   }
 }
 
-export async function executeTransaction<T>(queries: { query: string; params?: Record<string, any> }[]): Promise<T[][]> {
+export async function executeTransaction<T>(
+  queries: { query: string; params?: Record<string, any> }[]
+): Promise<T[][]> {
   const db = DatabaseService.getInstance();
-  return db.transaction(async (client) => {
+  return db.transaction(async client => {
     const results = [];
     for (const { query, params } of queries) {
       const result = await client.query(query, params ? Object.values(params) : undefined);

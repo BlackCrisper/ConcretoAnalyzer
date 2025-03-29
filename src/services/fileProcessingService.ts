@@ -43,20 +43,20 @@ export async function processProjectFile(file: ProjectFile): Promise<ExtractedDa
   try {
     // Atualizar status do arquivo
     await updateFileStatus(file.id, 'processing');
-    
+
     // Inicializar worker do Tesseract
     const worker = await createWorker({
-      langPath: process.env.OCR_MODEL_PATH
+      langPath: process.env.OCR_MODEL_PATH,
     });
     await worker.loadLanguage('por');
     await worker.initialize('por');
-    
+
     let extractedData: ExtractedData = {
       elements: [],
       tables: [],
-      notes: []
+      notes: [],
     };
-    
+
     // Processar arquivo baseado no tipo
     switch (file.type) {
       case 'pdf':
@@ -69,13 +69,13 @@ export async function processProjectFile(file: ProjectFile): Promise<ExtractedDa
         extractedData = await processDWG();
         break;
     }
-    
+
     // Salvar dados extraídos
     await saveExtractedData(file.projectId, extractedData);
-    
+
     // Atualizar status do arquivo
     await updateFileStatus(file.id, 'completed');
-    
+
     return extractedData;
   } catch (error) {
     console.error('Error processing file:', error);
@@ -88,47 +88,49 @@ async function processPDF(file: ProjectFile): Promise<ExtractedData> {
   const pdfPath = path.join(process.cwd(), file.path);
   const pdfData = new Uint8Array(fs.readFileSync(pdfPath));
   const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-  
+
   const extractedData: ExtractedData = {
     elements: [],
     tables: [],
-    notes: []
+    notes: [],
   };
-  
+
   // Processar cada página
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    
+
     // Extrair texto
     const text = textContent.items.map((item: any) => item.str).join(' ');
-    
+
     // Extrair elementos estruturais
     const elements = extractStructuredElements(text);
     extractedData.elements.push(...elements);
-    
+
     // Extrair tabelas
     const tables = await extractTables();
     extractedData.tables.push(...tables);
-    
+
     // Extrair notas técnicas
     const notes = extractTechnicalNotes(text);
     extractedData.notes.push(...notes);
   }
-  
+
   return extractedData;
 }
 
 async function processImage(file: ProjectFile, worker: any): Promise<ExtractedData> {
   const imagePath = path.join(process.cwd(), file.path);
-  
+
   // Realizar OCR na imagem
-  const { data: { text } } = await worker.recognize(imagePath);
-  
+  const {
+    data: { text },
+  } = await worker.recognize(imagePath);
+
   return {
     elements: extractStructuredElements(text),
     tables: [],
-    notes: extractTechnicalNotes(text)
+    notes: extractTechnicalNotes(text),
   };
 }
 
@@ -140,14 +142,14 @@ async function processDWG(): Promise<ExtractedData> {
 
 function extractStructuredElements(text: string): StructuredElement[] {
   const elements: StructuredElement[] = [];
-  
+
   // Padrões para extrair elementos estruturais
   const patterns = {
     pillar: /Pilar\s+(\d+)\s*:\s*(\d+)x(\d+)/g,
     beam: /Viga\s+(\d+)\s*:\s*(\d+)x(\d+)/g,
-    slab: /Laje\s+(\d+)\s*:\s*(\d+)cm/g
+    slab: /Laje\s+(\d+)\s*:\s*(\d+)cm/g,
   };
-  
+
   // Extrair pilares
   let match;
   while ((match = patterns.pillar.exec(text)) !== null) {
@@ -156,11 +158,11 @@ function extractStructuredElements(text: string): StructuredElement[] {
       number: match[1],
       dimensions: {
         width: parseInt(match[2]),
-        height: parseInt(match[3])
-      }
+        height: parseInt(match[3]),
+      },
     });
   }
-  
+
   // Extrair vigas
   while ((match = patterns.beam.exec(text)) !== null) {
     elements.push({
@@ -168,44 +170,44 @@ function extractStructuredElements(text: string): StructuredElement[] {
       number: match[1],
       dimensions: {
         width: parseInt(match[2]),
-        height: parseInt(match[3])
-      }
+        height: parseInt(match[3]),
+      },
     });
   }
-  
+
   // Extrair lajes
   while ((match = patterns.slab.exec(text)) !== null) {
     elements.push({
       type: 'slab',
       number: match[1],
       dimensions: {
-        thickness: parseInt(match[2])
-      }
+        thickness: parseInt(match[2]),
+      },
     });
   }
-  
+
   return elements;
 }
 
 async function extractTables(): Promise<Table[]> {
   const tables: Table[] = [];
-  
+
   // TODO: Implementar extração de tabelas
   // Isso requer análise do layout da página e detecção de estruturas tabulares
-  
+
   return tables;
 }
 
 function extractTechnicalNotes(text: string): TechnicalNote[] {
   const notes: TechnicalNote[] = [];
-  
+
   // Padrões para extrair notas técnicas
   const patterns = {
     fck: /fck\s*=\s*(\d+)/gi,
     steel: /aço\s*=\s*(\d+\.?\d*)\s*%/gi,
-    load: /carga\s*=\s*(\d+\.?\d*)\s*kN\/m²/gi
+    load: /carga\s*=\s*(\d+\.?\d*)\s*kN\/m²/gi,
   };
-  
+
   // Extrair notas
   for (const [type, pattern] of Object.entries(patterns)) {
     let match;
@@ -213,11 +215,11 @@ function extractTechnicalNotes(text: string): TechnicalNote[] {
       notes.push({
         type: type as 'fck' | 'steel' | 'load',
         content: match[0],
-        value: parseFloat(match[1])
+        value: parseFloat(match[1]),
       });
     }
   }
-  
+
   return notes;
 }
 
@@ -247,12 +249,12 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
         dimensions: JSON.stringify(element.dimensions),
         materials: JSON.stringify({
           concrete: { fck: 25, volume: 0 },
-          steel: { ratio: 0, weight: 0 }
+          steel: { ratio: 0, weight: 0 },
         }),
         location: JSON.stringify({
           level: 0,
-          position: ''
-        })
+          position: '',
+        }),
       }
     );
 
@@ -260,7 +262,7 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
       throw new Error('Failed to save structural element');
     }
   }
-  
+
   // Salvar tabelas
   for (const table of data.tables) {
     const result = await executeQuery<IdResult>(
@@ -274,7 +276,7 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
         projectId,
         type: table.type,
         data: JSON.stringify(table.data),
-        location: JSON.stringify(table.location)
+        location: JSON.stringify(table.location),
       }
     );
 
@@ -282,7 +284,7 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
       throw new Error('Failed to save table');
     }
   }
-  
+
   // Salvar notas técnicas
   for (const note of data.notes) {
     const result = await executeQuery<IdResult>(
@@ -299,8 +301,8 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
         location: JSON.stringify({
           page: 0,
           x: 0,
-          y: 0
-        })
+          y: 0,
+        }),
       }
     );
 
@@ -308,4 +310,4 @@ async function saveExtractedData(projectId: string, data: ExtractedData): Promis
       throw new Error('Failed to save technical note');
     }
   }
-} 
+}

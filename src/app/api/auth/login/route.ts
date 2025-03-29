@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
 
     // Return user data (except sensitive information)
     if (authResult.user) {
-      const { id, name, email, role, company, companyId, branchId, branchName, permissions } = authResult.user;
+      const { id, name, email, role, company, companyId, branchId, branchName, permissions } =
+        authResult.user;
 
       // Update last login timestamp in the database
       await updateUserLastLogin(id);
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
           branchId,
           branchName,
           permissions,
-        }
+        },
       });
     }
 
@@ -52,7 +53,6 @@ export async function POST(request: NextRequest) {
       { success: false, message: 'Erro inesperado durante autenticação' },
       { status: 500 }
     );
-
   } catch (error) {
     console.error('Login API error:', error);
 

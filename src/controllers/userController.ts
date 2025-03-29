@@ -83,10 +83,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     }
 
     // Verificar se o usuário existe
-    const existingUser = await executeQuery(
-      `SELECT id FROM Users WHERE id = @id`,
-      { id }
-    );
+    const existingUser = await executeQuery(`SELECT id FROM Users WHERE id = @id`, { id });
 
     if (!existingUser[0]) {
       res.status(404).json({ error: 'Usuário não encontrado' });
@@ -117,7 +114,7 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
     const params: any = {
       id,
       name,
-      email
+      email,
     };
 
     // Se estiver alterando a senha
@@ -167,10 +164,7 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
     }
 
     // Verificar se o usuário existe
-    const user = await executeQuery(
-      `SELECT id FROM Users WHERE id = @id`,
-      { id }
-    );
+    const user = await executeQuery(`SELECT id FROM Users WHERE id = @id`, { id });
 
     if (!user[0]) {
       res.status(404).json({ error: 'Usuário não encontrado' });
@@ -178,10 +172,7 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
     }
 
     // Verificar se o usuário tem projetos
-    const projects = await executeQuery(
-      `SELECT id FROM Projects WHERE user_id = @id`,
-      { id }
-    );
+    const projects = await executeQuery(`SELECT id FROM Projects WHERE user_id = @id`, { id });
 
     if (projects[0]) {
       res.status(400).json({ error: 'Não é possível excluir um usuário que possui projetos' });
@@ -259,7 +250,7 @@ export async function updateCurrentUser(req: Request, res: Response): Promise<vo
     const params: any = {
       userId,
       name,
-      email
+      email,
     };
 
     // Se estiver alterando a senha
@@ -279,4 +270,4 @@ export async function updateCurrentUser(req: Request, res: Response): Promise<vo
     console.error('Error updating current user:', error);
     res.status(500).json({ error: 'Erro ao atualizar usuário' });
   }
-} 
+}

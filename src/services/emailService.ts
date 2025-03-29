@@ -23,7 +23,10 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<EmailResult> {
+export async function sendPasswordResetEmail(
+  email: string,
+  resetToken: string
+): Promise<EmailResult> {
   const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
   const mailOptions: EmailOptions = {
@@ -45,14 +48,17 @@ export async function sendPasswordResetEmail(email: string, resetToken: string):
     return { success: true };
   } catch (error) {
     logger.error('Error sending password reset email:', error);
-    return { 
-      success: false, 
-      message: 'Erro ao enviar email de recuperação de senha' 
+    return {
+      success: false,
+      message: 'Erro ao enviar email de recuperação de senha',
     };
   }
 }
 
-export async function sendInvitationEmail(email: string, invitationToken: string): Promise<EmailResult> {
+export async function sendInvitationEmail(
+  email: string,
+  invitationToken: string
+): Promise<EmailResult> {
   const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation?token=${invitationToken}`;
 
   const mailOptions: EmailOptions = {
@@ -74,9 +80,9 @@ export async function sendInvitationEmail(email: string, invitationToken: string
     return { success: true };
   } catch (error) {
     logger.error('Error sending invitation email:', error);
-    return { 
-      success: false, 
-      message: 'Erro ao enviar email de convite' 
+    return {
+      success: false,
+      message: 'Erro ao enviar email de convite',
     };
   }
 }
@@ -101,9 +107,9 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<Ema
     return { success: true };
   } catch (error) {
     logger.error('Error sending welcome email:', error);
-    return { 
-      success: false, 
-      message: 'Erro ao enviar email de boas-vindas' 
+    return {
+      success: false,
+      message: 'Erro ao enviar email de boas-vindas',
     };
   }
-} 
+}

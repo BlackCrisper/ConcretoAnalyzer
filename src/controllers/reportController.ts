@@ -37,10 +37,9 @@ export async function generateProjectReport(req: AuthRequest, res: Response): Pr
     }
 
     // Verificar se o projeto existe e se o usuário tem acesso
-    const project = await executeQuery<Project>(
-      `SELECT user_id FROM Projects WHERE id = $1`,
-      [projectId]
-    );
+    const project = await executeQuery<Project>(`SELECT user_id FROM Projects WHERE id = $1`, [
+      projectId,
+    ]);
 
     if (!project[0]) {
       res.status(404).json({ error: 'Projeto não encontrado' });
@@ -95,8 +94,8 @@ export async function generateProjectReport(req: AuthRequest, res: Response): Pr
       report: {
         id: reportId,
         projectId,
-        status: 'processing'
-      }
+        status: 'processing',
+      },
     });
   } catch (error) {
     console.error('Error generating report:', error);
@@ -231,10 +230,7 @@ export async function shareReport(req: AuthRequest, res: Response): Promise<void
     }
 
     // Buscar usuário pelo email
-    const user = await executeQuery<User>(
-      `SELECT id FROM Users WHERE email = $1`,
-      [email]
-    );
+    const user = await executeQuery<User>(`SELECT id FROM Users WHERE email = $1`, [email]);
 
     if (!user[0]) {
       res.status(404).json({ error: 'Usuário não encontrado' });
@@ -253,8 +249,8 @@ export async function shareReport(req: AuthRequest, res: Response): Promise<void
       sharedWith: {
         reportId: id,
         sharedUserId: user[0].id,
-        accessLevel: role
-      }
+        accessLevel: role,
+      },
     });
   } catch (error) {
     console.error('Error sharing report:', error);
@@ -288,4 +284,4 @@ export async function getSharedReports(req: AuthRequest, res: Response): Promise
     console.error('Error getting shared reports:', error);
     res.status(500).json({ error: 'Erro ao buscar relatórios compartilhados' });
   }
-} 
+}

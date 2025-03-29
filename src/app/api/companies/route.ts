@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      companies
+      companies,
     });
   } catch (error) {
     console.error('Error getting companies:', error);
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Nome da empresa é obrigatório'
+          message: 'Nome da empresa é obrigatório',
         },
         { status: 400 }
       );
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       email: email || '',
       phone: phone || '',
       address: address || '',
-      active
+      active,
     });
 
     if (!result.success) {
@@ -56,14 +56,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Empresa criada com sucesso',
-      companyId: result.companyId
+      companyId: result.companyId,
     });
   } catch (error) {
     console.error('Error creating company:', error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao criar empresa' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao criar empresa' }, { status: 500 });
   }
 }

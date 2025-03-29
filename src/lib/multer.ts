@@ -20,13 +20,17 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // Configurar filtro de arquivos
-const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/dwg'];
-  
+
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -37,14 +41,14 @@ const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.
 // Configurar limites
 const limits = {
   fileSize: 10 * 1024 * 1024, // 10MB
-  files: 5 // Máximo de 5 arquivos por upload
+  files: 5, // Máximo de 5 arquivos por upload
 };
 
 // Criar middleware de upload
 const upload = multer({
   storage,
   fileFilter,
-  limits
+  limits,
 }).single('file');
 
 // Middleware de tratamento de erros
@@ -53,19 +57,19 @@ export function handleUploadError(err: any, req: Request, res: Response, next: a
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'Arquivo muito grande. Tamanho máximo permitido: 10MB'
+        message: 'Arquivo muito grande. Tamanho máximo permitido: 10MB',
       });
     }
     return res.status(400).json({
       success: false,
-      message: 'Erro ao fazer upload do arquivo'
+      message: 'Erro ao fazer upload do arquivo',
     });
   }
 
   if (err) {
     return res.status(400).json({
       success: false,
-      message: 'Tipo de arquivo não permitido'
+      message: 'Tipo de arquivo não permitido',
     });
   }
 
@@ -76,7 +80,7 @@ export function handleUploadSuccess(req: Request, res: Response, next: any) {
   if (!req.file) {
     return res.status(400).json({
       success: false,
-      message: 'Nenhum arquivo enviado'
+      message: 'Nenhum arquivo enviado',
     });
   }
 
@@ -87,7 +91,7 @@ export function handleUploadError500(err: Error, req: Request, res: Response, ne
   logger.error('Erro no upload:', err);
   return res.status(500).json({
     success: false,
-    message: 'Erro interno do servidor'
+    message: 'Erro interno do servidor',
   });
 }
 
@@ -145,4 +149,4 @@ export function ensureDirectoryExists(dirPath: string): void {
   }
 }
 
-export { upload }; 
+export { upload };

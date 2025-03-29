@@ -14,7 +14,7 @@ export class OCRService {
       language: OCR_CONFIG.LANGUAGE,
       confidenceThreshold: OCR_CONFIG.CONFIDENCE_THRESHOLD,
       maxRetries: OCR_CONFIG.MAX_RETRIES,
-      timeout: OCR_CONFIG.TIMEOUT
+      timeout: OCR_CONFIG.TIMEOUT,
     };
   }
 
@@ -33,9 +33,9 @@ export class OCRService {
       }
 
       this.worker = await createWorker({
-        logger: (m) => {
+        logger: m => {
           logger.debug('OCR Progress', { message: m });
-        }
+        },
       });
 
       await this.worker.loadLanguage(this.config.language);
@@ -54,11 +54,11 @@ export class OCRService {
       }
 
       const result = await this.worker!.recognize(imagePath);
-      
+
       if (result.data.confidence < this.config.confidenceThreshold) {
         logger.warn('Baixa confiança no reconhecimento', {
           confidence: result.data.confidence,
-          threshold: this.config.confidenceThreshold
+          threshold: this.config.confidenceThreshold,
         });
       }
 
@@ -74,9 +74,9 @@ export class OCRService {
             x1: word.bbox.x1,
             y1: word.bbox.y1,
             width: word.bbox.x1 - word.bbox.x0,
-            height: word.bbox.y1 - word.bbox.y0
-          }
-        }))
+            height: word.bbox.y1 - word.bbox.y0,
+          },
+        })),
       };
     } catch (error) {
       logger.error('Erro ao reconhecer texto', { error, imagePath });
@@ -101,13 +101,13 @@ export class OCRService {
     if (!this.worker) {
       return {
         status: 'initializing api',
-        progress: 0
+        progress: 0,
       };
     }
 
     return {
       status: 'processing',
-      progress: 0
+      progress: 0,
     };
   }
 
@@ -142,7 +142,7 @@ export async function recognizeTextWithRetry(
       logger.warn('Tentativa de reconhecimento falhou', {
         attempt: i + 1,
         maxRetries,
-        error
+        error,
       });
       await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
@@ -185,7 +185,7 @@ function extractTablesFromText(text: string): any[] {
       if (!currentTable) {
         currentTable = {
           headers: line.split('|').map(h => h.trim()),
-          rows: []
+          rows: [],
         };
       } else {
         currentTable.rows.push(
@@ -222,8 +222,8 @@ function extractStructuralElementsFromText(text: string): any[] {
         number: pillarMatch[1],
         dimensions: {
           width: Number(pillarMatch[2]),
-          height: Number(pillarMatch[3])
-        }
+          height: Number(pillarMatch[3]),
+        },
       });
     }
 
@@ -234,8 +234,8 @@ function extractStructuralElementsFromText(text: string): any[] {
         number: beamMatch[1],
         dimensions: {
           width: Number(beamMatch[2]),
-          height: Number(beamMatch[3])
-        }
+          height: Number(beamMatch[3]),
+        },
       });
     }
 
@@ -245,11 +245,11 @@ function extractStructuralElementsFromText(text: string): any[] {
         type: 'slab',
         number: slabMatch[1],
         dimensions: {
-          thickness: Number(slabMatch[2])
-        }
+          thickness: Number(slabMatch[2]),
+        },
       });
     }
   }
 
   return elements;
-} 
+}

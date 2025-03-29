@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      permissions
+      permissions,
     });
   } catch (error) {
     console.error('Error getting permissions:', error);

@@ -70,7 +70,11 @@ export interface OCRWorker {
 }
 
 export interface OCRProgress {
-  status: 'recognizing text' | 'loading tesseract core' | 'loading language traineddata' | 'initializing api';
+  status:
+    | 'recognizing text'
+    | 'loading tesseract core'
+    | 'loading language traineddata'
+    | 'initializing api';
   progress: number;
   data?: any;
-} 
+}

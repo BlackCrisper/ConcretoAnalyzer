@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { executeQuery } from '@/lib/db';
 import { Invitation, UserRole } from '@/contexts/auth-context';
@@ -49,12 +49,15 @@ export async function getAllInvitations(): Promise<Invitation[]> {
 
     for (const invitation of invitations) {
       // Get permissions
-      const permissions = await executeQuery<InvitationPermission>(`
+      const permissions = await executeQuery<InvitationPermission>(
+        `
         SELECT p.permission_code
         FROM InvitationPermissions ip
         JOIN Permissions p ON ip.permission_id = p.id
         WHERE ip.invitation_id = @invitationId
-      `, { invitationId: invitation.id });
+      `,
+        { invitationId: invitation.id }
+      );
 
       result.push({
         id: invitation.id,
@@ -67,7 +70,7 @@ export async function getAllInvitations(): Promise<Invitation[]> {
         createdAt: invitation.created_at,
         acceptedAt: invitation.accepted_at || undefined,
         status: invitation.status as 'pendente' | 'aceito' | 'expirado',
-        token: invitation.token
+        token: invitation.token,
       });
     }
 
@@ -79,7 +82,9 @@ export async function getAllInvitations(): Promise<Invitation[]> {
 }
 
 // Create a new invitation
-export async function createInvitation(invitationData: Omit<Invitation, 'id' | 'createdAt' | 'acceptedAt' | 'status' | 'token'>): Promise<Invitation> {
+export async function createInvitation(
+  invitationData: Omit<Invitation, 'id' | 'createdAt' | 'acceptedAt' | 'status' | 'token'>
+): Promise<Invitation> {
   try {
     // Generate token and set dates
     const token = crypto.randomBytes(20).toString('hex');
@@ -87,18 +92,21 @@ export async function createInvitation(invitationData: Omit<Invitation, 'id' | '
     const createdAt = now.toISOString();
 
     // Insert invitation into the database
-    const result = await executeQuery<IdResult>(`
+    const result = await executeQuery<IdResult>(
+      `
       INSERT INTO Invitations (email, role, branch_id, expires_at, created_at, status, token)
       VALUES (@email, @role, @branchId, @expiresAt, @createdAt, 'pendente', @token);
       SELECT SCOPE_IDENTITY() AS id;
-    `, {
-      email: invitationData.email,
-      role: invitationData.role,
-      branchId: invitationData.branchId,
-      expiresAt: invitationData.expiresAt,
-      createdAt,
-      token
-    });
+    `,
+      {
+        email: invitationData.email,
+        role: invitationData.role,
+        branchId: invitationData.branchId,
+        expiresAt: invitationData.expiresAt,
+        createdAt,
+        token,
+      }
+    );
 
     const invitationId = result[0]?.id;
 
@@ -109,19 +117,25 @@ export async function createInvitation(invitationData: Omit<Invitation, 'id' | '
     // Add invitation permissions
     if (invitationData.permissions.length > 0) {
       // Get permission IDs from permission codes
-      const permissionIds = await executeQuery<PermissionId>(`
+      const permissionIds = await executeQuery<PermissionId>(
+        `
         SELECT id FROM Permissions WHERE permission_code IN (@permissionCodes)
-      `, { permissionCodes: invitationData.permissions });
+      `,
+        { permissionCodes: invitationData.permissions }
+      );
 
       // Insert invitation permissions
       for (const permId of permissionIds) {
-        await executeQuery(`
+        await executeQuery(
+          `
           INSERT INTO InvitationPermissions (invitation_id, permission_id)
           VALUES (@invitationId, @permissionId)
-        `, {
-          invitationId,
-          permissionId: permId.id
-        });
+        `,
+          {
+            invitationId,
+            permissionId: permId.id,
+          }
+        );
       }
     }
 
@@ -139,14 +153,20 @@ export async function createInvitation(invitationData: Omit<Invitation, 'id' | '
 }
 
 // Accept invitation
-export async function acceptInvitation(token: string, password: string): Promise<{ success: boolean, message?: string }> {
+export async function acceptInvitation(
+  token: string,
+  password: string
+): Promise<{ success: boolean; message?: string }> {
   try {
     // Get invitation details
-    const invitations = await executeQuery<DBInvitation>(`
+    const invitations = await executeQuery<DBInvitation>(
+      `
       SELECT i.id, i.email, i.role, i.branch_id, i.expires_at, i.status
       FROM Invitations i
       WHERE i.token = @token
-    `, { token });
+    `,
+      { token }
+    );
 
     if (invitations.length === 0) {
       return { success: false, message: 'Convite não encontrado' };
@@ -165,25 +185,31 @@ export async function acceptInvitation(token: string, password: string): Promise
     }
 
     // Check if user already exists
-    const existingUsers = await executeQuery<CountResult>(`
+    const existingUsers = await executeQuery<CountResult>(
+      `
       SELECT COUNT(*) as count FROM Users WHERE email = @email
-    `, { email: invitation.email });
+    `,
+      { email: invitation.email }
+    );
 
     if (existingUsers[0]?.count > 0) {
       return { success: false, message: 'Já existe um usuário com este email' };
     }
 
     // Create user
-    const userResult = await executeQuery<IdResult>(`
+    const userResult = await executeQuery<IdResult>(
+      `
       INSERT INTO Users (email, password, role, branch_id)
       VALUES (@email, @password, @role, @branchId);
       SELECT SCOPE_IDENTITY() AS id;
-    `, {
-      email: invitation.email,
-      password,
-      role: invitation.role,
-      branchId: invitation.branch_id
-    });
+    `,
+      {
+        email: invitation.email,
+        password,
+        role: invitation.role,
+        branchId: invitation.branch_id,
+      }
+    );
 
     const userId = userResult[0]?.id;
 
@@ -192,35 +218,47 @@ export async function acceptInvitation(token: string, password: string): Promise
     }
 
     // Add user permissions
-    const permissions = await executeQuery<InvitationPermission>(`
+    const permissions = await executeQuery<InvitationPermission>(
+      `
       SELECT p.permission_code
       FROM InvitationPermissions ip
       JOIN Permissions p ON ip.permission_id = p.id
       WHERE ip.invitation_id = @invitationId
-    `, { invitationId: invitation.id });
+    `,
+      { invitationId: invitation.id }
+    );
 
     for (const permission of permissions) {
-      const permId = await executeQuery<PermissionId>(`
+      const permId = await executeQuery<PermissionId>(
+        `
         SELECT id FROM Permissions WHERE permission_code = @permissionCode
-      `, { permissionCode: permission.permission_code });
+      `,
+        { permissionCode: permission.permission_code }
+      );
 
       if (permId[0]?.id) {
-        await executeQuery(`
+        await executeQuery(
+          `
           INSERT INTO UserPermissions (user_id, permission_id)
           VALUES (@userId, @permissionId)
-        `, {
-          userId,
-          permissionId: permId[0].id
-        });
+        `,
+          {
+            userId,
+            permissionId: permId[0].id,
+          }
+        );
       }
     }
 
     // Update invitation status
-    await executeQuery(`
+    await executeQuery(
+      `
       UPDATE Invitations
       SET status = 'aceito', accepted_at = GETDATE()
       WHERE id = @invitationId
-    `, { invitationId: invitation.id });
+    `,
+      { invitationId: invitation.id }
+    );
 
     return { success: true };
   } catch (error) {
@@ -230,28 +268,39 @@ export async function acceptInvitation(token: string, password: string): Promise
 }
 
 // Revoke invitation
-export async function revokeInvitation(invitationId: string): Promise<{ success: boolean, message?: string }> {
+export async function revokeInvitation(
+  invitationId: string
+): Promise<{ success: boolean; message?: string }> {
   try {
     // Check if invitation exists
-    const invitationExists = await executeQuery<CountResult>(`
+    const invitationExists = await executeQuery<CountResult>(
+      `
       SELECT COUNT(*) as count FROM Invitations WHERE id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     if (invitationExists[0]?.count === 0) {
       return { success: false, message: 'Convite não encontrado' };
     }
 
     // Delete invitation permissions
-    await executeQuery(`
+    await executeQuery(
+      `
       DELETE FROM InvitationPermissions
       WHERE invitation_id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     // Delete invitation
-    await executeQuery(`
+    await executeQuery(
+      `
       DELETE FROM Invitations
       WHERE id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     return { success: true };
   } catch (error) {
@@ -261,12 +310,18 @@ export async function revokeInvitation(invitationId: string): Promise<{ success:
 }
 
 // Resend invitation
-export async function resendInvitation(invitationId: string, expiryDays: number): Promise<{ success: boolean, token?: string, message?: string }> {
+export async function resendInvitation(
+  invitationId: string,
+  expiryDays: number
+): Promise<{ success: boolean; token?: string; message?: string }> {
   try {
     // Check if invitation exists
-    const invitationExists = await executeQuery<CountResult>(`
+    const invitationExists = await executeQuery<CountResult>(
+      `
       SELECT COUNT(*) as count FROM Invitations WHERE id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     if (invitationExists[0]?.count === 0) {
       return { success: false, message: 'Convite não encontrado' };
@@ -278,18 +333,21 @@ export async function resendInvitation(invitationId: string, expiryDays: number)
     expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
     // Update invitation
-    await executeQuery(`
+    await executeQuery(
+      `
       UPDATE Invitations
       SET token = @token,
           expires_at = @expiresAt,
           status = 'pendente',
           accepted_at = NULL
       WHERE id = @invitationId
-    `, {
-      token,
-      expiresAt: expiresAt.toISOString(),
-      invitationId
-    });
+    `,
+      {
+        token,
+        expiresAt: expiresAt.toISOString(),
+        invitationId,
+      }
+    );
 
     return { success: true, token };
   } catch (error) {
@@ -301,13 +359,16 @@ export async function resendInvitation(invitationId: string, expiryDays: number)
 // Get invitation by ID
 export async function getInvitationById(invitationId: string): Promise<Invitation | null> {
   try {
-    const invitations = await executeQuery<DBInvitation>(`
+    const invitations = await executeQuery<DBInvitation>(
+      `
       SELECT i.id, i.email, i.role, i.branch_id, b.name as branch_name,
              i.expires_at, i.created_at, i.accepted_at, i.status, i.token
       FROM Invitations i
       LEFT JOIN Branches b ON i.branch_id = b.id
       WHERE i.id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     if (invitations.length === 0) {
       return null;
@@ -316,12 +377,15 @@ export async function getInvitationById(invitationId: string): Promise<Invitatio
     const invitation = invitations[0];
 
     // Get permissions
-    const permissions = await executeQuery<InvitationPermission>(`
+    const permissions = await executeQuery<InvitationPermission>(
+      `
       SELECT p.permission_code
       FROM InvitationPermissions ip
       JOIN Permissions p ON ip.permission_id = p.id
       WHERE ip.invitation_id = @invitationId
-    `, { invitationId });
+    `,
+      { invitationId }
+    );
 
     return {
       id: invitation.id,
@@ -334,7 +398,7 @@ export async function getInvitationById(invitationId: string): Promise<Invitatio
       createdAt: invitation.created_at,
       acceptedAt: invitation.accepted_at || undefined,
       status: invitation.status as 'pendente' | 'aceito' | 'expirado',
-      token: invitation.token
+      token: invitation.token,
     };
   } catch (error) {
     console.error(`Error getting invitation ${invitationId}:`, error);

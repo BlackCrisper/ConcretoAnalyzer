@@ -172,4 +172,4 @@ export interface ExtractedData {
   elements: any[];
   tables: any[];
   notes: any[];
-} 
+}

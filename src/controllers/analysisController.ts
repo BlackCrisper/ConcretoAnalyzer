@@ -80,8 +80,8 @@ export async function startAnalysis(req: AuthRequest, res: Response): Promise<vo
       analysis: {
         id: analysisId,
         projectId,
-        status: 'processing'
-      }
+        status: 'processing',
+      },
     });
   } catch (error) {
     console.error('Error starting analysis:', error);
@@ -123,7 +123,7 @@ export async function getAnalysisStatus(req: AuthRequest, res: Response): Promis
       status: analysis[0].status,
       errorMessage: analysis[0].error_message,
       progress: analysis[0].progress,
-      results: analysis[0].results
+      results: analysis[0].results,
     });
   } catch (error) {
     console.error('Error getting analysis status:', error);
@@ -221,4 +221,4 @@ export async function cancelAnalysis(req: AuthRequest, res: Response): Promise<v
     console.error('Error canceling analysis:', error);
     res.status(500).json({ error: 'Erro ao cancelar análise' });
   }
-} 
+}

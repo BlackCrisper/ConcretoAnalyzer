@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, updateUser, deleteUser } from '@/services/userService';
 
 // Get user by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const userId = params.id;
     const user = await getUserById(userId);
@@ -31,24 +28,18 @@ export async function GET(
         companyId,
         branchId,
         branchName,
-        permissions
-      }
+        permissions,
+      },
     });
   } catch (error) {
     console.error(`Error getting user ${params.id}:`, error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao obter usuário' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao obter usuário' }, { status: 500 });
   }
 }
 
 // Update user
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const userId = params.id;
     const body = await request.json();
@@ -74,7 +65,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Usuário atualizado com sucesso'
+      message: 'Usuário atualizado com sucesso',
     });
   } catch (error) {
     console.error(`Error updating user ${params.id}:`, error);
@@ -87,10 +78,7 @@ export async function PUT(
 }
 
 // Delete user
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const userId = params.id;
 
@@ -115,7 +103,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Usuário excluído com sucesso'
+      message: 'Usuário excluído com sucesso',
     });
   } catch (error) {
     console.error(`Error deleting user ${params.id}:`, error);

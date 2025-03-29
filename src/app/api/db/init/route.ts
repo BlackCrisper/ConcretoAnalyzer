@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Database initialized successfully'
+      message: 'Database initialized successfully',
     });
   } catch (error) {
     console.error('Error initializing database:', error);

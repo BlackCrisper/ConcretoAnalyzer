@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getInvitationById, resendInvitation } from '@/services/invitationService';
 
 // Resend invitation
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const invitationId = params.id;
     const body = await request.json();
@@ -33,7 +30,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: 'Convite reenviado com sucesso',
-      token: result.token
+      token: result.token,
     });
   } catch (error) {
     console.error(`Error resending invitation ${params.id}:`, error);

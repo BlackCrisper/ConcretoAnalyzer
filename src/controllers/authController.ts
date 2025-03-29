@@ -11,7 +11,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const { name, email, password, role } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await executeQuery<UserWithPassword>('INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *', 
+    const result = await executeQuery<UserWithPassword>(
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
       [name, email, hashedPassword, role]
     );
 
@@ -29,8 +30,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     logger.error('Erro ao registrar usuário:', error);
@@ -42,7 +43,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    const result = await executeQuery<UserWithPassword>('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await executeQuery<UserWithPassword>('SELECT * FROM users WHERE email = $1', [
+      email,
+    ]);
     const user = result[0];
 
     if (!user) {
@@ -64,8 +67,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     logger.error('Erro ao fazer login:', error);
@@ -89,8 +92,8 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     logger.error('Erro ao obter perfil:', error);
@@ -119,8 +122,8 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
     logger.error('Erro ao atualizar perfil:', error);
@@ -143,10 +146,11 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const resetToken = crypto.randomBytes(20).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hora
 
-    await executeQuery(
-      'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3',
-      [resetToken, resetTokenExpiry, user.id]
-    );
+    await executeQuery('UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3', [
+      resetToken,
+      resetTokenExpiry,
+      user.id,
+    ]);
 
     // TODO: Enviar email com token de reset
 
@@ -190,10 +194,9 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
   try {
     const { token } = req.params;
 
-    const result = await executeQuery<User>(
-      'SELECT * FROM users WHERE verification_token = $1',
-      [token]
-    );
+    const result = await executeQuery<User>('SELECT * FROM users WHERE verification_token = $1', [
+      token,
+    ]);
     const user = result[0];
 
     if (!user) {
@@ -240,4 +243,4 @@ export async function logout(_req: Request, res: Response): Promise<void> {
     console.error('Error logging out:', error);
     res.status(500).json({ error: 'Erro ao fazer logout' });
   }
-} 
+}

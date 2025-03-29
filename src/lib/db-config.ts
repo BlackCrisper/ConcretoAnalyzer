@@ -13,7 +13,7 @@ export const sqlConfig: config = {
   pool: {
     max: 10,
     min: 0,
-    idleTimeoutMillis: 30000
+    idleTimeoutMillis: 30000,
   },
-  connectionTimeout: 30000
+  connectionTimeout: 30000,
 };

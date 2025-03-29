@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCompanyById, updateCompany, deleteCompany } from '@/services/companyService';
 
 // Get company by ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const companyId = params.id;
     const company = await getCompanyById(companyId);
@@ -19,23 +16,17 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      company
+      company,
     });
   } catch (error) {
     console.error(`Error getting company ${params.id}:`, error);
 
-    return NextResponse.json(
-      { success: false, message: 'Erro ao obter empresa' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Erro ao obter empresa' }, { status: 500 });
   }
 }
 
 // Update company
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const companyId = params.id;
     const body = await request.json();
@@ -61,7 +52,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: 'Empresa atualizada com sucesso'
+      message: 'Empresa atualizada com sucesso',
     });
   } catch (error) {
     console.error(`Error updating company ${params.id}:`, error);
@@ -74,10 +65,7 @@ export async function PUT(
 }
 
 // Delete company
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const companyId = params.id;
 
@@ -102,7 +90,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Empresa excluída com sucesso'
+      message: 'Empresa excluída com sucesso',
     });
   } catch (error) {
     console.error(`Error deleting company ${params.id}:`, error);

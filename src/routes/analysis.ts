@@ -8,19 +8,15 @@ import {
   startAnalysis,
   getAnalysisStatus,
   getAnalysisResults,
-  cancelAnalysis
+  cancelAnalysis,
 } from '../controllers/analysisController';
 
 const router = express.Router();
 
 // Validações
-const projectIdValidation = [
-  param('projectId').isUUID().withMessage('ID de projeto inválido')
-];
+const projectIdValidation = [param('projectId').isUUID().withMessage('ID de projeto inválido')];
 
-const analysisIdValidation = [
-  param('analysisId').isUUID().withMessage('ID de análise inválido')
-];
+const analysisIdValidation = [param('analysisId').isUUID().withMessage('ID de análise inválido')];
 
 // Middleware de autenticação para todas as rotas
 router.use(authMiddleware as express.RequestHandler);
@@ -60,4 +56,4 @@ router.post(
   cancelAnalysis as unknown as express.RequestHandler
 );
 
-export default router; 
+export default router;

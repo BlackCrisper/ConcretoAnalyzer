@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markNotificationAsRead } from '@/services/notificationService';
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const notificationId = params.id;
 
@@ -25,7 +22,6 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('Mark notification as read API error:', error);
     return NextResponse.json(
@@ -33,4 +29,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+}

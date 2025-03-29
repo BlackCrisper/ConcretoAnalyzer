@@ -1,7 +1,17 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { register, login, refreshToken, logout, getProfile, updateProfile, forgotPassword, resetPassword, verifyEmail } from '../controllers/authController';
+import {
+  register,
+  login,
+  refreshToken,
+  logout,
+  getProfile,
+  updateProfile,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+} from '../controllers/authController';
 import { authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
@@ -10,17 +20,13 @@ const router = express.Router();
 const registerValidation = [
   body('name').trim().notEmpty().withMessage('Nome é obrigatório'),
   body('email').isEmail().withMessage('Email inválido'),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Senha deve ter no mínimo 6 caracteres'),
-  body('role')
-    .isIn(['admin', 'engineer', 'client'])
-    .withMessage('Papel inválido')
+  body('password').isLength({ min: 6 }).withMessage('Senha deve ter no mínimo 6 caracteres'),
+  body('role').isIn(['admin', 'engineer', 'client']).withMessage('Papel inválido'),
 ];
 
 const loginValidation = [
   body('email').isEmail().withMessage('Email inválido'),
-  body('password').notEmpty().withMessage('Senha é obrigatória')
+  body('password').notEmpty().withMessage('Senha é obrigatória'),
 ];
 
 // Rotas públicas
@@ -44,4 +50,4 @@ protectedRouter.put('/me', validateRequest, updateProfile);
 
 router.use('/api', authMiddleware as express.RequestHandler, protectedRouter);
 
-export default router; 
+export default router;

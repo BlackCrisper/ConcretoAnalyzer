@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Successfully connected to the SQL Server database',
-      version: result.recordset[0].version
+      version: result.recordset[0].version,
     });
   } catch (error) {
     console.error('Database connection error:', error);
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         message: 'Failed to connect to the SQL Server database',
-        error: String(error)
+        error: String(error),
       },
       { status: 500 }
     );

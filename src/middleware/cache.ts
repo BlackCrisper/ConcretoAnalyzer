@@ -12,7 +12,7 @@ interface CacheData {
 }
 
 // Middleware de cache para GET
-export function cacheMiddleware(ttl: number = 3600) {
+export function cacheMiddleware(ttl = 3600) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Apenas para requisições GET
@@ -27,19 +27,19 @@ export function cacheMiddleware(ttl: number = 3600) {
         logger.debug('Dados obtidos do cache', {
           key,
           path: req.path,
-          method: req.method
+          method: req.method,
         });
         return res.json(cachedData);
       }
 
       // Interceptar resposta
       const originalJson = res.json;
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         cacheService.set(key, data, ttl).catch(error => {
           logger.error('Erro ao armazenar no cache', {
             error,
             key,
-            ttl
+            ttl,
           });
         });
         return originalJson.call(this, data);
@@ -50,7 +50,7 @@ export function cacheMiddleware(ttl: number = 3600) {
       logger.error('Erro no middleware de cache', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       next();
     }
@@ -79,19 +79,19 @@ export function routeCacheMiddleware(routes: { [key: string]: number }) {
           key,
           path: req.path,
           method: req.method,
-          ttl
+          ttl,
         });
         return res.json(cachedData);
       }
 
       // Interceptar resposta
       const originalJson = res.json;
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         cacheService.set(key, data, ttl).catch(error => {
           logger.error('Erro ao armazenar rota no cache', {
             error,
             key,
-            ttl
+            ttl,
           });
         });
         return originalJson.call(this, data);
@@ -102,7 +102,7 @@ export function routeCacheMiddleware(routes: { [key: string]: number }) {
       logger.error('Erro no middleware de cache de rotas', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       next();
     }
@@ -110,7 +110,7 @@ export function routeCacheMiddleware(routes: { [key: string]: number }) {
 }
 
 // Middleware de cache para queries
-export function queryCacheMiddleware(ttl: number = 3600) {
+export function queryCacheMiddleware(ttl = 3600) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Apenas para requisições GET
@@ -125,19 +125,19 @@ export function queryCacheMiddleware(ttl: number = 3600) {
         logger.debug('Query obtida do cache', {
           key,
           path: req.path,
-          method: req.method
+          method: req.method,
         });
         return res.json(cachedData);
       }
 
       // Interceptar resposta
       const originalJson = res.json;
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         cacheService.set(key, data, ttl).catch(error => {
           logger.error('Erro ao armazenar query no cache', {
             error,
             key,
-            ttl
+            ttl,
           });
         });
         return originalJson.call(this, data);
@@ -148,7 +148,7 @@ export function queryCacheMiddleware(ttl: number = 3600) {
       logger.error('Erro no middleware de cache de queries', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       next();
     }
@@ -156,7 +156,7 @@ export function queryCacheMiddleware(ttl: number = 3600) {
 }
 
 // Middleware de cache para respostas parciais
-export function partialCacheMiddleware(ttl: number = 3600) {
+export function partialCacheMiddleware(ttl = 3600) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Apenas para requisições GET
@@ -171,25 +171,25 @@ export function partialCacheMiddleware(ttl: number = 3600) {
         logger.debug('Dados parciais obtidos do cache', {
           key,
           path: req.path,
-          method: req.method
+          method: req.method,
         });
         return res.json(cachedData);
       }
 
       // Interceptar resposta
       const originalJson = res.json;
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         // Armazenar apenas dados parciais
         const partialData = {
           timestamp: Date.now(),
-          data: data.slice(0, 10) // Exemplo: apenas 10 itens
+          data: data.slice(0, 10), // Exemplo: apenas 10 itens
         };
 
         cacheService.set(key, partialData, ttl).catch(error => {
           logger.error('Erro ao armazenar dados parciais no cache', {
             error,
             key,
-            ttl
+            ttl,
           });
         });
         return originalJson.call(this, data);
@@ -200,7 +200,7 @@ export function partialCacheMiddleware(ttl: number = 3600) {
       logger.error('Erro no middleware de cache parcial', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       next();
     }
@@ -208,7 +208,7 @@ export function partialCacheMiddleware(ttl: number = 3600) {
 }
 
 // Middleware de cache para respostas condicionais
-export function conditionalCacheMiddleware(ttl: number = 3600) {
+export function conditionalCacheMiddleware(ttl = 3600) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Não usar cache para métodos não GET
@@ -217,7 +217,7 @@ export function conditionalCacheMiddleware(ttl: number = 3600) {
       }
 
       const key = `cache:conditional:${req.originalUrl}`;
-      const cachedData = await cacheService.get(key) as CacheData | null;
+      const cachedData = (await cacheService.get(key)) as CacheData | null;
 
       if (cachedData) {
         const etag = req.headers['if-none-match'];
@@ -225,7 +225,7 @@ export function conditionalCacheMiddleware(ttl: number = 3600) {
           logger.debug('Resposta condicional do cache', {
             key,
             path: req.path,
-            method: req.method
+            method: req.method,
           });
           return res.status(304).send();
         }
@@ -233,23 +233,20 @@ export function conditionalCacheMiddleware(ttl: number = 3600) {
 
       // Interceptar resposta
       const originalJson = res.json;
-      res.json = function(data: any) {
-        const etag = require('crypto')
-          .createHash('md5')
-          .update(JSON.stringify(data))
-          .digest('hex');
+      res.json = function (data: any) {
+        const etag = require('crypto').createHash('md5').update(JSON.stringify(data)).digest('hex');
 
         const cacheData: CacheData = {
           data,
           etag,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         cacheService.set(key, cacheData, ttl).catch(error => {
           logger.error('Erro ao armazenar dados condicionais no cache', {
             error,
             key,
-            ttl
+            ttl,
           });
         });
 
@@ -262,9 +259,9 @@ export function conditionalCacheMiddleware(ttl: number = 3600) {
       logger.error('Erro no middleware de cache condicional', {
         error,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
       next();
     }
   };
-} 
+}

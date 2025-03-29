@@ -33,7 +33,7 @@ afterAll(() => {
 
 // Configuração de mocks globais
 jest.mock('../lib/db', () => ({
-  executeQuery: jest.fn()
+  executeQuery: jest.fn(),
 }));
 
 jest.mock('../lib/email', () => ({
@@ -43,7 +43,7 @@ jest.mock('../lib/email', () => ({
   sendAnalysisCompleteEmail: jest.fn(),
   sendReportGeneratedEmail: jest.fn(),
   sendShareNotificationEmail: jest.fn(),
-  sendErrorNotificationEmail: jest.fn()
+  sendErrorNotificationEmail: jest.fn(),
 }));
 
 jest.mock('../lib/logger', () => ({
@@ -51,7 +51,7 @@ jest.mock('../lib/logger', () => ({
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   },
   logInfo: jest.fn(),
   logError: jest.fn(),
@@ -59,7 +59,7 @@ jest.mock('../lib/logger', () => ({
   logDebug: jest.fn(),
   httpLogger: jest.fn(),
   logUnhandledError: jest.fn(),
-  logUnhandledRejection: jest.fn()
+  logUnhandledRejection: jest.fn(),
 }));
 
 // Configuração de diretórios de teste
@@ -84,28 +84,28 @@ export const TEST_CONFIG = {
     LANGUAGE: 'por',
     CONFIDENCE_THRESHOLD: 0.7,
     MAX_RETRIES: 3,
-    TIMEOUT: 30000
+    TIMEOUT: 30000,
   },
   DB: {
     HOST: 'localhost',
     PORT: 5432,
     DATABASE: 'estrutura_test',
     USER: 'postgres',
-    PASSWORD: 'postgres'
+    PASSWORD: 'postgres',
   },
   JWT: {
     SECRET: 'test-secret',
-    EXPIRES_IN: '1h'
+    EXPIRES_IN: '1h',
   },
   SERVER: {
     PORT: 3001,
-    NODE_ENV: 'test'
+    NODE_ENV: 'test',
   },
   UPLOAD: {
     MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
     ALLOWED_TYPES: ['pdf', 'png', 'jpg', 'jpeg'],
-    UPLOAD_DIR: path.join(FIXTURES_DIR, 'uploads')
-  }
+    UPLOAD_DIR: path.join(FIXTURES_DIR, 'uploads'),
+  },
 };
 
 // Configuração de dados de teste
@@ -116,8 +116,8 @@ export const TEST_DATA = {
       name: 'Test User',
       email: 'test@example.com',
       password: 'hashed_password',
-      role: 'engineer'
-    }
+      role: 'engineer',
+    },
   ],
   projects: [
     {
@@ -125,8 +125,8 @@ export const TEST_DATA = {
       name: 'Test Project',
       description: 'Test Description',
       userId: 1,
-      status: 'active'
-    }
+      status: 'active',
+    },
   ],
   files: [
     {
@@ -135,7 +135,7 @@ export const TEST_DATA = {
       name: 'test.pdf',
       type: 'pdf',
       path: path.join(FIXTURES_DIR, 'test.pdf'),
-      status: 'processed'
-    }
-  ]
-}; 
+      status: 'processed',
+    },
+  ],
+};

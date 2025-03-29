@@ -30,7 +30,7 @@ export class CacheService {
     } catch (error) {
       logger.error('Erro ao obter valor do cache', {
         error,
-        key
+        key,
       });
       return null;
     }
@@ -42,12 +42,12 @@ export class CacheService {
       await this.redis.set(this.getKey(key), serializedValue, ttl || CACHE_CONFIG.TTL);
       logger.debug('Valor armazenado no cache', {
         key,
-        ttl: ttl || CACHE_CONFIG.TTL
+        ttl: ttl || CACHE_CONFIG.TTL,
       });
     } catch (error) {
       logger.error('Erro ao armazenar valor no cache', {
         error,
-        key
+        key,
       });
     }
   }
@@ -59,7 +59,7 @@ export class CacheService {
     } catch (error) {
       logger.error('Erro ao remover valor do cache', {
         error,
-        key
+        key,
       });
     }
   }
@@ -70,7 +70,7 @@ export class CacheService {
     } catch (error) {
       logger.error('Erro ao verificar existência no cache', {
         error,
-        key
+        key,
       });
       return false;
     }
@@ -82,7 +82,7 @@ export class CacheService {
     } catch (error) {
       logger.error('Erro ao incrementar valor no cache', {
         error,
-        key
+        key,
       });
       return 0;
     }
@@ -93,13 +93,13 @@ export class CacheService {
       await this.redis.expire(this.getKey(key), ttl);
       logger.debug('TTL definido no cache', {
         key,
-        ttl
+        ttl,
       });
     } catch (error) {
       logger.error('Erro ao definir TTL no cache', {
         error,
         key,
-        ttl
+        ttl,
       });
     }
   }
@@ -116,11 +116,7 @@ export class CacheService {
     }
   }
 
-  public async getOrSet<T>(
-    key: string,
-    fn: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
+  public async getOrSet<T>(key: string, fn: () => Promise<T>, ttl?: number): Promise<T> {
     try {
       const cached = await this.get<T>(key);
       if (cached !== null) {
@@ -132,13 +128,13 @@ export class CacheService {
       await this.set(key, value, ttl);
       logger.debug('Valor obtido da função e armazenado no cache', {
         key,
-        ttl: ttl || CACHE_CONFIG.TTL
+        ttl: ttl || CACHE_CONFIG.TTL,
       });
       return value;
     } catch (error) {
       logger.error('Erro ao obter ou definir valor no cache', {
         error,
-        key
+        key,
       });
       return fn();
     }
@@ -154,8 +150,8 @@ export class CacheService {
     } catch (error) {
       logger.error('Erro ao invalidar cache por padrão', {
         error,
-        pattern
+        pattern,
       });
     }
   }
-} 
+}

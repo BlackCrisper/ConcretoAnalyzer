@@ -21,12 +21,16 @@ class ValidationService {
   }
 
   // Validar string
-  public validateString(value: any, field: string, options: {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
-  } = {}): ValidationError | null {
+  public validateString(
+    value: any,
+    field: string,
+    options: {
+      required?: boolean;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: RegExp;
+    } = {}
+  ): ValidationError | null {
     if (options.required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -53,12 +57,16 @@ class ValidationService {
   }
 
   // Validar número
-  public validateNumber(value: any, field: string, options: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    integer?: boolean;
-  } = {}): ValidationError | null {
+  public validateNumber(
+    value: any,
+    field: string,
+    options: {
+      required?: boolean;
+      min?: number;
+      max?: number;
+      integer?: boolean;
+    } = {}
+  ): ValidationError | null {
     if (options.required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -87,7 +95,7 @@ class ValidationService {
   }
 
   // Validar email
-  public validateEmail(value: any, field: string, required: boolean = false): ValidationError | null {
+  public validateEmail(value: any, field: string, required = false): ValidationError | null {
     if (required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -103,11 +111,15 @@ class ValidationService {
   }
 
   // Validar data
-  public validateDate(value: any, field: string, options: {
-    required?: boolean;
-    min?: Date;
-    max?: Date;
-  } = {}): ValidationError | null {
+  public validateDate(
+    value: any,
+    field: string,
+    options: {
+      required?: boolean;
+      min?: Date;
+      max?: Date;
+    } = {}
+  ): ValidationError | null {
     if (options.required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -132,12 +144,16 @@ class ValidationService {
   }
 
   // Validar array
-  public validateArray(value: any, field: string, options: {
-    required?: boolean;
-    minLength?: number;
-    maxLength?: number;
-    itemValidator?: (item: any) => ValidationError | null;
-  } = {}): ValidationError | null {
+  public validateArray(
+    value: any,
+    field: string,
+    options: {
+      required?: boolean;
+      minLength?: number;
+      maxLength?: number;
+      itemValidator?: (item: any) => ValidationError | null;
+    } = {}
+  ): ValidationError | null {
     if (options.required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -169,10 +185,14 @@ class ValidationService {
   }
 
   // Validar objeto
-  public validateObject(value: any, field: string, options: {
-    required?: boolean;
-    schema?: Record<string, (value: any) => ValidationError | null>;
-  } = {}): ValidationError | null {
+  public validateObject(
+    value: any,
+    field: string,
+    options: {
+      required?: boolean;
+      schema?: Record<string, (value: any) => ValidationError | null>;
+    } = {}
+  ): ValidationError | null {
     if (options.required && !value) {
       return { field, message: 'Campo obrigatório' };
     }
@@ -209,7 +229,7 @@ export const validateRequest = (schema: {
     // Validar body
     if (schema.body) {
       const bodyError = validation.validateObject(req.body, 'body', {
-        schema: schema.body
+        schema: schema.body,
       });
       if (bodyError) errors.push(bodyError);
     }
@@ -217,7 +237,7 @@ export const validateRequest = (schema: {
     // Validar query
     if (schema.query) {
       const queryError = validation.validateObject(req.query, 'query', {
-        schema: schema.query
+        schema: schema.query,
       });
       if (queryError) errors.push(queryError);
     }
@@ -225,7 +245,7 @@ export const validateRequest = (schema: {
     // Validar params
     if (schema.params) {
       const paramsError = validation.validateObject(req.params, 'params', {
-        schema: schema.params
+        schema: schema.params,
       });
       if (paramsError) errors.push(paramsError);
     }
@@ -240,4 +260,4 @@ export const validateRequest = (schema: {
 };
 
 // Exportar instância do serviço
-export const validation = ValidationService.getInstance(); 
+export const validation = ValidationService.getInstance();
